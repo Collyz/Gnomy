@@ -9,7 +9,7 @@ import SpriteKit
 import GameplayKit
 
 class GameScene: SKScene {
-    
+    //Comment
     var entities = [GKEntity]()
     var graphs = [String : GKGraph]()
     
