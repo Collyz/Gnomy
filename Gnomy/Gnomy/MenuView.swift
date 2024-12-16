@@ -11,37 +11,36 @@ import SpriteKit
 struct MenuView: View {
     
     var body: some View {
-        VStack {
-            Spacer()
-            Text("Help him get home!")
-                .font(.title3)
-                .bold()
-            
-            Spacer()
-            Button {
-                // TODO: Start Game
-            } label: {
-                Text("Start!")
-                    .foregroundStyle(Color("DarkGreen"))
+        NavigationStack {
+            VStack {
+                Spacer()
+                Text("Help him get home!")
+                    .font(.title3)
                     .bold()
-                    .font(.largeTitle)
-                    .padding(.horizontal, 25)
-                    .padding(.vertical, 0)
-            }
-            .background(Color.yellow)
-            .cornerRadius(20)
-            .overlay(RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.white, lineWidth: 5))
-            .offset(x: 0, y: -175)
-                
-            
-        }.background(
-            Image("menuBg")
-                .resizable()
-                .scaledToFill()
-                .scaleEffect(1.07)
-        ).ignoresSafeArea()
-    }
+                NavigationLink(destination: GameView()) {
+                    Text("Start!")
+                        .foregroundStyle(Color("DarkGreen"))
+                        .bold()
+                        .font(.largeTitle)
+                        .padding(.horizontal, 25)
+                        .padding(.vertical, 0)
+                        .background(Color.yellow)
+                        .cornerRadius(20)
+                        .overlay(RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.white, lineWidth: 3))
+                        .shadow(radius: 10)
+                        .padding(.bottom, 175)
+                        .padding(.top, 220)
+                }
+            }.background(
+                Image("menuBg")
+                    .resizable()
+                    .scaledToFill()
+                    .scaleEffect(1.07)
+            )
+            .ignoresSafeArea()
+        }
+        }
 }
 
 #Preview {
