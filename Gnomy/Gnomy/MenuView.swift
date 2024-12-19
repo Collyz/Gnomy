@@ -14,9 +14,10 @@ struct MenuView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                Text("Help him get home!")
+                Text("Help him home!")
                     .font(.title3)
                     .bold()
+                    .foregroundStyle(Color.darkGreen)
                 NavigationLink(destination: GameView()) {
                     Text("Start!")
                         .foregroundStyle(Color("DarkGreen"))

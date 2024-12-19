@@ -30,7 +30,7 @@ struct GameView: View {
                         .foregroundStyle(Color.black)
                 }
                 .position(x: UIScreen.main.bounds.width - 40, y: 10) // Position at the top-right
-            }
+            }.navigationBarBackButtonHidden(true)
         }
 }
 
