@@ -11,6 +11,8 @@ import GameplayKit
 class GameScene: SKScene {
     // player
     private let player = SKSpriteNode(imageNamed: "player")
+    private var touchOffset: CGPoint?
+    
     override func didMove(to view: SKView) {
         // this method is called when your game scene is ready to run
         physicsWorld.gravity = CGVector(dx: 0, dy: -9) // world gravity
@@ -38,16 +40,23 @@ class GameScene: SKScene {
 //        }
         //END OF ----- FROM TUTORIAL quite nice :3
         
-        // get the players location and move to finger only x pos
         guard let touch = touches.first else { return }
         let loc = touch.location(in: self)
-        player.position.x = loc.x
+        touchOffset = CGPoint(x: loc.x - player.position.x, y:loc.y - player.position.y)
+        
+        
+        // get the players location and move to finger only x pos
+        
+        // TODO: put movePlayer function here instead
+//        guard let touch = touches.first else { return }
+//        let loc = touch.location(in: self)
+//        player.position.x = loc.x
         
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user stops touching the screen
-        
+        touchOffset = nil
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -70,19 +79,33 @@ class GameScene: SKScene {
         
     }
     
+    // called everytime a *move touch* is input
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         // move on touch move
-        guard let touch = touches.first else { return }
-        let loc = touch.location(in: self)
-        player.position.x = loc.x
+        movePlayer(touches)
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         //
     }
     
-    func movePlayer(touchPos: CGPoint) {
-        //TODO: move player offset from touch (i.e. from finger)
+    func movePlayer(_ touches: Set<UITouch>) {
+        // TODO: move player offset from touch (i.e. from finger)
+        guard let touch = touches.first else { return }
+        let touchPos = touch.location(in: self)
+        let playerPos = player.position
+        let xBound = frame.width
+        if let offset = touchOffset {
+            var newPosition = CGPoint(x: touchPos.x - offset.x, y: player.position.y)
+
+            // Constrain the player's movement within screen bounds
+            let leftBound = frame.minX + player.size.width / 2
+            let rightBound = frame.maxX - player.size.width / 2
+            newPosition.x = max(leftBound, min(newPosition.x, rightBound))
+
+            // Update the player's position
+            player.position = newPosition
+        }
     }
     
     func generateCollectable() {
