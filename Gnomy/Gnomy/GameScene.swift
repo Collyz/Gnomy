@@ -20,20 +20,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var touchOffset: CGPoint?    // Touch offset
     // Blocks
     private var blocks: Array<SKSpriteNode> = Array()
-    
+    private var 
     override func didMove(to view: SKView) {
         // this method is called when your game scene is ready to run
         physicsWorld.gravity = CGVector(dx: 0, dy: -9)
         physicsWorld.contactDelegate = self // Respond to contacts
 
         createBackground()
-        createPlayer(upwardVel: 1000)
+        createPlayer(upwardVel: 1300)
         generatePlatform(at: CGPoint(x: 0, y: -400)) // Test platform
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user touches the screen
-        // FROM TUTORIAL quite nice :3
+        // -----
 //        guard let touch = touches.first else { return }
 //        let location = touch.location(in: self)
 //        let tappedNode = nodes(at: location) //allows you to get the nodes quite easily
@@ -45,7 +45,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //                self.generateCollectable()
 //            }
 //        }
-        //END OF ----- FROM TUTORIAL quite nice :3
+        // -----
         
         // Code block to update the touchOffset of the player
         guard let touch = touches.first else { return }
@@ -57,6 +57,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user stops touching the screen
         touchOffset = nil
+    }
+    
+    // called everytime a *move touch* is input
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // move on touch move
+        movePlayer(touches)
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -80,13 +90,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if (player.physicsBody?.velocity.dy)! <= 0 {
             for block in blocks {
-                print("falling and making block solid")
                 block.physicsBody?.categoryBitMask = 1
                 block.physicsBody?.collisionBitMask = 1
             }
         } else{
             for block in blocks {
-                print("jumping and making block solid")
                 block.physicsBody?.categoryBitMask = 0
                 block.physicsBody?.collisionBitMask = 0
             }
@@ -94,15 +102,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
-    // called everytime a *move touch* is input
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        // move on touch move
-        movePlayer(touches)
-    }
     
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        //
-    }
+    
     
     func movePlayer(_ touches: Set<UITouch>) {
         // TODO: move player offset from touch (i.e. from finger)
@@ -170,17 +171,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blocks.append(block)
     }
     
-//    func didBegin(_ contact: SKPhysicsContact) {
-//
-//        // Identify the bodies involved in the collision
-//        var bodyA = SKPhysicsBody()
-//        var bodyB = SKPhysicsBody()
-//
-//        // Determine which body is the player
-//        let playerBody = (bodyA.node?.name == "player") ? bodyA : bodyB
-//        let platformBody = (playerBody == bodyA) ? bodyB : bodyA
-//
-//        // Ensure the other body is a platform
+    func didBegin(_ contact: SKPhysicsContact) {
+
+        // Identify the bodies involved in the collision
+        var bodyA = SKPhysicsBody()
+        var bodyB = SKPhysicsBody()
+
+        print("called")
+        // Determine which body is the player
+        let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
+        if (playerBody.velocity.dy < 0) {
+            playerBody.velocity = CGVector(dx: 0, dy: 1400)
+        }
+        
+        
+
+        // Ensure the other body is a platform
 //        guard platformBody.categoryBitMask == PhysicsCategory.platform else { return }
 //
 //        // Check if the player is falling onto the platform
@@ -192,7 +198,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //                playerNode.position.y = platformNode.frame.maxY + playerNode.size.height / 2
 //            }
 //        }
-//    }
+    }
 
 }
 
