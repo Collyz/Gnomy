@@ -37,7 +37,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         generateBaseFloor(at: CGPoint(x: 0, y: -1000), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         createPlayer()
-        generatePlatform(at: CGPoint(x: 0, y: -400)) // Test platform
+        generatePlatform(at: CGPoint(x: 0, y: -300)) // Test platform
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -121,24 +121,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             cam.position.y = player.position.y
         } else if cam.position.y - player.position.y > 600{
             // TODO: insert pause functionality and loss screen
+            player.removeFromParent()
         }
-//        if cam.frame.minY - 50 < player.position.y {
-//            print("lost")
-//        }
-//        if player.position.y < -400 {
-//            cam.position.y = -400
-//        } else if (player.physicsBody?.velocity.dy)! < 0 {
-//           // do nothing
-//        } else {
-//            cam.position.y = player.position.y
-//        }
         background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 400
     }
     
     // MARK: - Moves the player sideways based on player movement
     func movePlayer(_ touches: Set<UITouch>) {
-        // TODO: move player offset from touch (i.e. from finger)
+        // Moves player offset from touch (i.e. from finger)
         guard let touch = touches.first else { return }
         let touchPos = touch.location(in: self)
         if let offset = touchOffset {
@@ -161,14 +152,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.size = CGSize(width: 90, height: 90)
         player.position = CGPoint(x: 0, y: -900)
         
-        // adding physics
+        // Adding physics
         player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
         player.physicsBody?.isDynamic = true
         player.physicsBody?.affectedByGravity = true
         player.physicsBody?.allowsRotation = false
         player.physicsBody?.restitution = 0 // No bounce
-        player.texture!.filteringMode = .nearest;
-        player.zPosition = 0;
+        
+        // Set physics category
+        player.physicsBody?.categoryBitMask = PhysicsCategory.player
+        player.physicsBody?.contactTestBitMask = PhysicsCategory.platform
+        player.physicsBody?.collisionBitMask = PhysicsCategory.platform
+
+        player.texture!.filteringMode = .nearest
+        player.zPosition = 0
         addChild(player)
     }
     
@@ -191,11 +188,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Add physics to the platform
         block.physicsBody = SKPhysicsBody(texture: block.texture!, size: block.size)
         block.physicsBody?.isDynamic = false // Static platform
-        block.physicsBody?.categoryBitMask = PhysicsCategory.platform
-        block.physicsBody?.contactTestBitMask = PhysicsCategory.player
-        block.physicsBody?.collisionBitMask = PhysicsCategory.player
         block.physicsBody?.restitution = 0 // No bounce
-
+        
+        // Set physics category
+        player.physicsBody?.categoryBitMask = PhysicsCategory.platform
+        player.physicsBody?.contactTestBitMask = PhysicsCategory.player
+        player.physicsBody?.collisionBitMask = PhysicsCategory.player
+        
         block.texture!.filteringMode = .nearest
         block.zPosition = 1
         addChild(block)
@@ -231,6 +230,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(scoreNode)
     }
     
+    // MARK: - Player jumps
     func jump() {
         player.physicsBody?.velocity = CGVector(dx: 0, dy: 1400)
     }
@@ -246,6 +246,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // make player jump up again
         if (contact.contactNormal.dy == -1 && platformNode.name != "floor") {
             jump()
+            print("jumped")
             if platformNode.scored == false{
                 platformNode.scored = true
                 score += 1;
