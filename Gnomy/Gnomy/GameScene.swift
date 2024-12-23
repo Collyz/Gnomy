@@ -32,6 +32,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.gravity = CGVector(dx: 0, dy: -9)
         physicsWorld.contactDelegate = self // Respond to contacts
         self.camera = cam
+        camera?.position = CGPoint(x: 0, y: -400)
         createBackground()
         generateBaseFloor(at: CGPoint(x: 0, y: -1000), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
@@ -91,7 +92,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //END OF ----- FROM TUTORIAL quite nice :3
         
         // On the update, move the player to the finger position
-        
+
         // Player moves through blocks if going up, else do not fall through
         if (player.physicsBody?.velocity.dy)! <= 0 {
             for block in blocks {
@@ -114,12 +115,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     override func didSimulatePhysics() {
-        print(cam.frame.midY)
-        if player.position.y < -400 {
-            cam.position.y = -400
-        } else {
+//        print("camera frame maxY \(cam.frame.maxY), camera frame minY \(cam.frame.minY) player position y: \(player.position.y)")
+//        print(cam.frame.height)
+        if cam.position.y - player.position.y < 0 {
             cam.position.y = player.position.y
+        } else if cam.position.y - player.position.y > 600{
+            // TODO: insert pause functionality and loss screen
         }
+//        if cam.frame.minY - 50 < player.position.y {
+//            print("lost")
+//        }
+//        if player.position.y < -400 {
+//            cam.position.y = -400
+//        } else if (player.physicsBody?.velocity.dy)! < 0 {
+//           // do nothing
+//        } else {
+//            cam.position.y = player.position.y
+//        }
         background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 400
     }
