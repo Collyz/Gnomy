@@ -22,6 +22,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private let cam = SKCameraNode()
     private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
     private let background = SKSpriteNode(imageNamed: "background")
+    private let pauseButton = SKSpriteNode(imageNamed: "pause")
     
     // Blocks
     private var blocks: Array<Block> = Array()
@@ -37,6 +38,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         generateBaseFloor(at: CGPoint(x: 0, y: -1000), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         createPlayer()
+        addPauseButton()
         generatePlatform(at: CGPoint(x: 0, y: -300)) // Test platform
     }
     
@@ -59,6 +61,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Code block to update the touchOffset of the player
         guard let touch = touches.first else { return }
         let loc = touch.location(in: self)
+        let tappedNode = atPoint(loc)
+        
+        isPaused = tappedNode.name == "pauseButton"
         touchOffset = CGPoint(x: loc.x - player.position.x, y:loc.y - player.position.y)
         
     }
@@ -82,16 +87,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
-        //FROM TUTORIAL quite nice :3
-//        for node in children {
-//            if node.position.y < -700 {
-//                node.removeFromParent()
-//                generateCollectable()
-//            }
-//        }
-        //END OF ----- FROM TUTORIAL quite nice :3
-        
-        // On the update, move the player to the finger position
 
         // Player moves through blocks if going up, else do not fall through
         if (player.physicsBody?.velocity.dy)! <= 0 {
@@ -112,8 +107,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
-    
-    
     override func didSimulatePhysics() {
 //        print("camera frame maxY \(cam.frame.maxY), camera frame minY \(cam.frame.minY) player position y: \(player.position.y)")
 //        print(cam.frame.height)
@@ -125,6 +118,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 400
+        pauseButton.position.y = cam.position.y + 600
     }
     
     // MARK: - Moves the player sideways based on player movement
@@ -235,6 +229,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody?.velocity = CGVector(dx: 0, dy: 1400)
     }
     
+    // MARK: - Pause button assignments
+    func addPauseButton() {
+        pauseButton.name = "pauseButton"
+        pauseButton.size = CGSize(width: 50, height: 50)
+        pauseButton.position = CGPoint(x: 230, y: 0)
+        pauseButton.zPosition = 2
+        addChild(pauseButton)
+    }
+
+    
     
     // MARK: - Handles collission
     func didBegin(_ contact: SKPhysicsContact) {
@@ -246,7 +250,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // make player jump up again
         if (contact.contactNormal.dy == -1 && platformNode.name != "floor") {
             jump()
-            print("jumped")
             if platformNode.scored == false{
                 platformNode.scored = true
                 score += 1;
