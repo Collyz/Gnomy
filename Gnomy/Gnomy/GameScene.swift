@@ -18,8 +18,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Player
     private let player = SKSpriteNode(imageNamed: "player")
     private var touchOffset: CGPoint?    // Touch offset
+    private var score: Int = 0
     // Blocks
-    private var blocks: Array<SKSpriteNode> = Array()
+    private var blocks: Array<Block> = Array()
     
     
     override func didMove(to view: SKView) {
@@ -89,6 +90,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player.physicsBody?.velocity = CGVector(dx: 0, dy: 1400)
         }
         
+        // Player moves through blocks if going up, else do not fall through
         if (player.physicsBody?.velocity.dy)! <= 0 {
             for block in blocks {
                 block.physicsBody?.categoryBitMask = 1
@@ -102,8 +104,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
     }
-    
-    
     
     
     func movePlayer(_ touches: Set<UITouch>) {
@@ -154,7 +154,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Platform Generation
     func generatePlatform(at position: CGPoint){
-        let block = SKSpriteNode(imageNamed: "b_grass")
+        let block = Block(imageNamed: "b_grass")
         block.name = "platform"
         block.scale(to: CGSize(width: 130, height: 60))
         block.position = position
@@ -176,25 +176,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         // Determine which body is the player
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
+        let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
+        
+        guard let platformNode = platformBody.node as? Block else { return }
         // make player jump up again
         if (contact.contactNormal.dy == -1 || playerBody.velocity.dy == 0) {
             playerBody.velocity = CGVector(dx: 0, dy: 1400)
+            if platformNode.scored == false {
+                platformNode.scored = true
+                score += 1;
+                print(score)
+            }
         }
-        
-        
-
-        // Ensure the other body is a platform
-//        guard platformBody.categoryBitMask == PhysicsCategory.platform else { return }
-//
-//        // Check if the player is falling onto the platform
-//        if let playerPhysicsBody = playerBody.node?.physicsBody, playerPhysicsBody.velocity.dy <= 0 {
-//            print("fallin")
-//            // Stop the player's downward movement and place the player on top of the platform
-//            playerPhysicsBody.velocity = CGVector(dx: 0, dy: 0)
-//            if let platformNode = platformBody.node, let playerNode = playerBody.node as? SKSpriteNode {
-//                playerNode.position.y = platformNode.frame.maxY + playerNode.size.height / 2
-//            }
-//        }
     }
 
 }
