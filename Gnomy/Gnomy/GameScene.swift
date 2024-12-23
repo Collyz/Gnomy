@@ -29,6 +29,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.contactDelegate = self // Respond to contacts
 
         createBackground()
+        displayScore(at: CGPoint(x: frame.midX, y: frame.midY + 200))
         createPlayer(upwardVel: 1300)
         generatePlatform(at: CGPoint(x: 0, y: -400)) // Test platform
     }
@@ -153,7 +154,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Platform Generation
-    func generatePlatform(at position: CGPoint){
+    func generatePlatform(at position: CGPoint) {
         let block = Block(imageNamed: "b_grass")
         block.name = "platform"
         block.scale(to: CGSize(width: 130, height: 60))
@@ -173,6 +174,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blocks.append(block)
     }
     
+    // MARK: Score Display
+    func displayScore( at position: CGPoint) {
+        let score = SKLabelNode(fontNamed: "Chalkduster")
+        score.name = "score"
+        score.text = String(self.score)
+        score.fontSize = 65
+        score.fontColor = SKColor.green
+        score.position = position
+        score.zPosition = 1
+        addChild(score)
+    }
+    
+    
+    
     func didBegin(_ contact: SKPhysicsContact) {
         // Determine which body is the player
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
@@ -185,7 +200,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if platformNode.scored == false {
                 platformNode.scored = true
                 score += 1;
-                print(score)
+                guard let temp = self.childNode(withName: "score") as? SKLabelNode else { return }
+                temp.text = String(score)
             }
         }
     }
