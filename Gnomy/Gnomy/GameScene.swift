@@ -86,7 +86,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if player.position.y < -600 {
 //            player.removeFromParent()
 //            generateCollectable()
-            player.physicsBody?.velocity = CGVector(dx: 0, dy: 900)
+            player.physicsBody?.velocity = CGVector(dx: 0, dy: 1400)
         }
         
         if (player.physicsBody?.velocity.dy)! <= 0 {
@@ -174,13 +174,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-
-        print("called")
         // Determine which body is the player
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
-
         // make player jump up again
-        if (playerBody.velocity.dy <= 0) {
+        if (contact.contactNormal.dy == -1 || playerBody.velocity.dy == 0) {
             playerBody.velocity = CGVector(dx: 0, dy: 1400)
         }
         
