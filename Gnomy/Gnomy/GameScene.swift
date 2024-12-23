@@ -29,7 +29,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.contactDelegate = self // Respond to contacts
 
         createBackground()
-        displayScore(at: CGPoint(x: frame.midX, y: frame.midY + 200))
+        displayScore(at: CGPoint(x: frame.midX, y: frame.midY + 400))
         createPlayer(upwardVel: 1300)
         generatePlatform(at: CGPoint(x: 0, y: -400)) // Test platform
     }
@@ -180,7 +180,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         score.name = "score"
         score.text = String(self.score)
         score.fontSize = 65
-        score.fontColor = SKColor.green
+        score.fontColor = SKColor.darkGreen
         score.position = position
         score.zPosition = 1
         addChild(score)
