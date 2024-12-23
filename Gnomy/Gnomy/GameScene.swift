@@ -20,7 +20,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var touchOffset: CGPoint?    // Touch offset
     // Blocks
     private var blocks: Array<SKSpriteNode> = Array()
-    private var 
+    
+    
     override func didMove(to view: SKView) {
         // this method is called when your game scene is ready to run
         physicsWorld.gravity = CGVector(dx: 0, dy: -9)
@@ -132,6 +133,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
         player.physicsBody?.isDynamic = true
         player.physicsBody?.affectedByGravity = true
+        player.physicsBody?.allowsRotation = false
         player.position = CGPoint(x: 0, y:0)
         
         player.texture!.filteringMode = .nearest;
@@ -173,14 +175,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func didBegin(_ contact: SKPhysicsContact) {
 
-        // Identify the bodies involved in the collision
-        var bodyA = SKPhysicsBody()
-        var bodyB = SKPhysicsBody()
-
         print("called")
         // Determine which body is the player
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
-        if (playerBody.velocity.dy < 0) {
+
+        // make player jump up again
+        if (playerBody.velocity.dy <= 0) {
             playerBody.velocity = CGVector(dx: 0, dy: 1400)
         }
         
