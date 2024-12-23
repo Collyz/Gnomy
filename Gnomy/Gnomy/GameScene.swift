@@ -35,7 +35,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createBackground()
         generateBaseFloor(at: CGPoint(x: 0, y: -1000), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
-        createPlayer(upwardVel: 1300)
+        createPlayer()
         generatePlatform(at: CGPoint(x: 0, y: -400)) // Test platform
     }
     
@@ -111,8 +111,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    
+    
     override func didSimulatePhysics() {
-        cam.position.y = player.position.y + 300
+        if cam.position.y > -400 {
+            cam.position.y = player.position.y + 300
+        }
         background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 400
     }
@@ -137,7 +141,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     // MARK: - Player generations
-    func createPlayer(upwardVel velocity: Int) {
+    func createPlayer() {
         player.name = "player"
         player.size = CGSize(width: 90, height: 90)
         
@@ -151,7 +155,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.texture!.filteringMode = .nearest;
         player.zPosition = 0;
         addChild(player)
-        player.physicsBody?.velocity = CGVector(dx: 0, dy: velocity)
     }
     
     // MARK: - Background assignments
