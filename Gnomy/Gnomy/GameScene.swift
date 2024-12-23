@@ -116,6 +116,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didSimulatePhysics() {
         if cam.position.y > -400 {
             cam.position.y = player.position.y + 300
+        } else {
+            cam.position.y = -400
         }
         background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 400
@@ -144,14 +146,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func createPlayer() {
         player.name = "player"
         player.size = CGSize(width: 90, height: 90)
+        player.position = CGPoint(x: 0, y: -900)
         
         // adding physics
         player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
         player.physicsBody?.isDynamic = true
         player.physicsBody?.affectedByGravity = true
         player.physicsBody?.allowsRotation = false
-        player.position = CGPoint(x: 0, y:0)
-        
+        player.physicsBody?.restitution = 0 // No bounce
         player.texture!.filteringMode = .nearest;
         player.zPosition = 0;
         addChild(player)
