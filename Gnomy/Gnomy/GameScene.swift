@@ -54,7 +54,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //            }
 //        }
         // -----
-        
+        jump()
         // Code block to update the touchOffset of the player
         guard let touch = touches.first else { return }
         let loc = touch.location(in: self)
@@ -114,10 +114,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     override func didSimulatePhysics() {
-        if cam.position.y > -400 {
-            cam.position.y = player.position.y + 300
-        } else {
+        print(cam.frame.midY)
+        if player.position.y < -400 {
             cam.position.y = -400
+        } else {
+            cam.position.y = player.position.y
         }
         background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 400
