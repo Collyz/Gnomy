@@ -7,4 +7,5 @@
 import SpriteKit
 class Block: SKSpriteNode{
     public var scored: Bool = false;
+    public var isBaseFloor: Bool = false;
 }

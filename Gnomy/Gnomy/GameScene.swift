@@ -19,6 +19,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private let player = SKSpriteNode(imageNamed: "player")
     private var touchOffset: CGPoint?    // Touch offset
     private var score: Int = 0
+    private let cam = SKCameraNode()
+    private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
+    private let background = SKSpriteNode(imageNamed: "background")
+    
     // Blocks
     private var blocks: Array<Block> = Array()
     
@@ -27,9 +31,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // this method is called when your game scene is ready to run
         physicsWorld.gravity = CGVector(dx: 0, dy: -9)
         physicsWorld.contactDelegate = self // Respond to contacts
-
+        self.camera = cam
         createBackground()
-        displayScore(at: CGPoint(x: frame.midX, y: frame.midY + 400))
+        generateBaseFloor(at: CGPoint(x: 0, y: -1000), CGSize(width: 700, height: 200))
+        displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         createPlayer(upwardVel: 1300)
         generatePlatform(at: CGPoint(x: 0, y: -400)) // Test platform
     }
@@ -59,6 +64,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user stops touching the screen
+        
         touchOffset = nil
     }
     
@@ -72,6 +78,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //
     }
     
+    // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
         //FROM TUTORIAL quite nice :3
@@ -84,29 +91,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //END OF ----- FROM TUTORIAL quite nice :3
         
         // On the update, move the player to the finger position
-        //TODO: remove this update once base floor is created
-        if player.position.y < -600 {
-//            player.removeFromParent()
-//            generateCollectable()
-            player.physicsBody?.velocity = CGVector(dx: 0, dy: 1400)
-        }
         
         // Player moves through blocks if going up, else do not fall through
         if (player.physicsBody?.velocity.dy)! <= 0 {
             for block in blocks {
-                block.physicsBody?.categoryBitMask = 1
-                block.physicsBody?.collisionBitMask = 1
+                if(block.name != "floor") {
+                    block.physicsBody?.categoryBitMask = 1
+                    block.physicsBody?.collisionBitMask = 1
+                }
             }
         } else{
             for block in blocks {
-                block.physicsBody?.categoryBitMask = 0
-                block.physicsBody?.collisionBitMask = 0
+                if(block.name != "floor") {
+                    block.physicsBody?.categoryBitMask = 0
+                    block.physicsBody?.collisionBitMask = 0
+                }
             }
         }
         
     }
     
+    override func didSimulatePhysics() {
+        cam.position.y = player.position.y + 300
+        background.position.y = cam.position.y
+        scoreNode.position.y = cam.position.y + 400
+    }
     
+    // MARK: - Moves the player sideways based on player movement
     func movePlayer(_ touches: Set<UITouch>) {
         // TODO: move player offset from touch (i.e. from finger)
         guard let touch = touches.first else { return }
@@ -143,10 +154,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody?.velocity = CGVector(dx: 0, dy: velocity)
     }
     
-    // MARK: - Background generation
+    // MARK: - Background assignments
     func createBackground() {
         // Background
-        let background = SKSpriteNode(imageNamed: "background")
         background.name = "background"
         background.zPosition = -1
         background.scale(to: CGSize(width: 620, height: 1400))
@@ -174,20 +184,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blocks.append(block)
     }
     
+    // MARK: - Starting Floor Generation
+    func generateBaseFloor(at position: CGPoint, _ dimensions: CGSize) {
+        let baseFloor = Block(imageNamed: "b_grass")
+        baseFloor.scored = true
+        baseFloor.isBaseFloor = true
+        baseFloor.name = "floor"
+        baseFloor.scale(to: dimensions)
+        baseFloor.position = position
+        
+        // Add physics to floor
+        baseFloor.physicsBody = SKPhysicsBody(texture: baseFloor.texture!, size: baseFloor.size)
+        baseFloor.physicsBody?.isDynamic = false
+        baseFloor.physicsBody?.allowsRotation = false
+        baseFloor.zPosition = 1
+        addChild(baseFloor)
+        blocks.append(baseFloor)
+    }
+    
     // MARK: Score Display
     func displayScore( at position: CGPoint) {
-        let score = SKLabelNode(fontNamed: "Chalkduster")
-        score.name = "score"
-        score.text = String(self.score)
-        score.fontSize = 65
-        score.fontColor = SKColor.darkGreen
-        score.position = position
-        score.zPosition = 1
-        addChild(score)
+        scoreNode.name = "score"
+        scoreNode.text = String(self.score)
+        scoreNode.fontSize = 65
+        scoreNode.fontColor = SKColor.darkGreen
+        scoreNode.position = position
+        scoreNode.zPosition = 1
+        addChild(scoreNode)
+    }
+    
+    func jump() {
+        player.physicsBody?.velocity = CGVector(dx: 0, dy: 1400)
     }
     
     
-    
+    // MARK: - Handles collission
     func didBegin(_ contact: SKPhysicsContact) {
         // Determine which body is the player
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
@@ -195,9 +226,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         guard let platformNode = platformBody.node as? Block else { return }
         // make player jump up again
-        if (contact.contactNormal.dy == -1 || playerBody.velocity.dy == 0) {
-            playerBody.velocity = CGVector(dx: 0, dy: 1400)
-            if platformNode.scored == false {
+        if (contact.contactNormal.dy == -1 && platformNode.name != "floor") {
+            jump()
+            if platformNode.scored == false{
                 platformNode.scored = true
                 score += 1;
                 guard let temp = self.childNode(withName: "score") as? SKLabelNode else { return }
