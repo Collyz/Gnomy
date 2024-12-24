@@ -20,6 +20,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var score: Int = 0
     private var nextPlatformY: CGFloat = 0
     private let nextAddY: CGFloat = 250
+    private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     
     // Player
     private let player = SKSpriteNode(imageNamed: "player")
@@ -49,11 +50,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         generatePlatform()
         
         // TODO: Pregenerate blocks?? or Iteravely???
-        if blocks.count <= 25 {
-            while blocks.count <= 25 {
-                generatePlatform()
-            }
-        }
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -128,7 +124,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // TODO: Generate the platforms if there are fewer than 3/4 platforms on the screen
         for block in blocks {
             if block.position.y < cam.position.y && cam.position.y - block.position.y  > self.bounds.height / 2 + 100 {
-                blocks.removeFirst().removeFromParent()
+                blocks.remove(at: blocks.firstIndex(of: block)!).removeFromParent()
             }
         }
     }
@@ -200,7 +196,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Platform Generation
     func generatePlatform() {
-        let block = Block(imageNamed: "b_wood")
+        let block = Block(imageNamed: blockNames[score / 100])
         block.name = "platform"
         block.scale(to: CGSize(width: 130, height: 30))
         block.position = CGPoint(x: CGFloat.random(in: frame.minX + block.size.width...frame.maxX - block.size.width), y: nextPlatformY)
@@ -280,7 +276,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         guard let platformNode = platformBody.node as? Block else { return }
         // make player jump up again
-        if (contact.contactNormal.dy == -1 || platformNode.isBaseFloor) && firstTap {
+        if (contact.contactNormal.dy == -1 || platformNode.isBaseFloor || !platformNode.isBaseFloor) && firstTap {
+            while(blocks.count < 7) {
+                generatePlatform()
+            }
             jump()
             if platformNode.scored == false{
                 platformNode.scored = true
