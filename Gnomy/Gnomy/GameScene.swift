@@ -124,6 +124,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
         }
+        
         // TODO: Generate the platforms if there are fewer than 3/4 platforms on the screen
 //        for block in blocks {
 //            if block.position.y - player.position.y > self.bounds.height {
@@ -139,7 +140,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             cam.position.y = player.position.y
         } else if cam.position.y - player.position.y > (self.bounds.height / 2) + 100{
             // TODO: insert pause functionality and loss screen
-            print("removedPlayer")
             player.removeFromParent()
         }
         background.position.y = cam.position.y
@@ -236,6 +236,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         baseFloor.physicsBody?.isDynamic = false
         baseFloor.physicsBody?.allowsRotation = false
         baseFloor.zPosition = 1
+        
+        // Set physics category
+        player.physicsBody?.categoryBitMask = PhysicsCategory.platform
+        player.physicsBody?.contactTestBitMask = PhysicsCategory.player
+        player.physicsBody?.collisionBitMask = PhysicsCategory.player
+        
         addChild(baseFloor)
         nextPlatformY += nextAddY
         blocks.append(baseFloor)
@@ -265,8 +271,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         pauseButton.zPosition = 2
         addChild(pauseButton)
     }
-
-    
     
     // MARK: - Handles collission
     func didBegin(_ contact: SKPhysicsContact) {
@@ -276,7 +280,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         guard let platformNode = platformBody.node as? Block else { return }
         // make player jump up again
-        if (contact.contactNormal.dy == -1 && platformNode.name != "floor") {
+        if (contact.contactNormal.dy == -1 || platformNode.isBaseFloor) && firstTap {
             jump()
             if platformNode.scored == false{
                 platformNode.scored = true
