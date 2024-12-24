@@ -107,7 +107,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
-
+    
         // Player moves through blocks if going up, else do not fall through
         if (player.physicsBody?.velocity.dy)! <= 0 {
             for block in blocks {
@@ -126,11 +126,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         // TODO: Generate the platforms if there are fewer than 3/4 platforms on the screen
-//        for block in blocks {
-//            if block.position.y - player.position.y > self.bounds.height {
-//                blocks.removeFirst()
-//            }
-//        }
+        for block in blocks {
+            if block.position.y < cam.position.y && cam.position.y - block.position.y  > self.bounds.height / 2 + 100 {
+                blocks.removeFirst().removeFromParent()
+            }
+        }
     }
     
     override func didSimulatePhysics() {
