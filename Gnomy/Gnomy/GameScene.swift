@@ -15,10 +15,14 @@ struct PhysicsCategory {
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    // Game logic
+    private var firstTap = false // first jump check
+    private var score: Int = 0
+    
     // Player
     private let player = SKSpriteNode(imageNamed: "player")
     private var touchOffset: CGPoint?    // Touch offset
-    private var score: Int = 0
+    
     private let cam = SKCameraNode()
     private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
     private let background = SKSpriteNode(imageNamed: "background")
@@ -57,13 +61,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //            }
 //        }
         // -----
-        jump()
+        
         // Code block to update the touchOffset of the player
         guard let touch = touches.first else { return }
         let loc = touch.location(in: self)
         let tappedNode = atPoint(loc)
+        // Jump only on the first tap to the screen that isn't on the pause button
+        if(tappedNode.name == "pauseButton") {
+            isPaused = !isPaused
+        } else if !firstTap{
+            jump()
+            firstTap = true
+        }
         
-        isPaused = tappedNode.name == "pauseButton"
         touchOffset = CGPoint(x: loc.x - player.position.x, y:loc.y - player.position.y)
         
     }
