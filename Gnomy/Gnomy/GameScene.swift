@@ -18,6 +18,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Game logic
     private var firstTap = false // first jump check
     private var score: Int = 0
+    private var nextPlatformY: CGFloat = 0
+    private let nextAddY: CGFloat = 250
     
     // Player
     private let player = SKSpriteNode(imageNamed: "player")
@@ -34,16 +36,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         // this method is called when your game scene is ready to run
-        physicsWorld.gravity = CGVector(dx: 0, dy: -9)
+        physicsWorld.gravity = CGVector(dx: 0, dy: -5)
         physicsWorld.contactDelegate = self // Respond to contacts
-        self.camera = cam
+        camera = cam
         camera?.position = CGPoint(x: 0, y: -400)
         createBackground()
-        generateBaseFloor(at: CGPoint(x: 0, y: -1000), CGSize(width: 700, height: 200))
+        nextPlatformY += -1000
+        generateBaseFloor(at: CGPoint(x: 0, y: nextPlatformY), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         createPlayer()
         addPauseButton()
-        generatePlatform(at: CGPoint(x: 0, y: -300)) // Test platform
+        generatePlatform()
+        
+        // TODO: Pregenerate blocks?? or Iteravely???
+        if blocks.count <= 25 {
+            while blocks.count <= 25 {
+                generatePlatform()
+            }
+        }
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -114,7 +124,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
         }
-        
+        // TODO: Generate the platforms if there are fewer than 3/4 platforms on the screen
+//        for block in blocks {
+//            if block.position.y - player.position.y > self.bounds.height {
+//                blocks.removeFirst()
+//            }
+//        }
     }
     
     override func didSimulatePhysics() {
@@ -122,8 +137,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        print(cam.frame.height)
         if cam.position.y - player.position.y < 0 {
             cam.position.y = player.position.y
-        } else if cam.position.y - player.position.y > 600{
+        } else if cam.position.y - player.position.y > (self.bounds.height / 2) + 100{
             // TODO: insert pause functionality and loss screen
+            print("removedPlayer")
             player.removeFromParent()
         }
         background.position.y = cam.position.y
@@ -183,11 +199,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Platform Generation
-    func generatePlatform(at position: CGPoint) {
-        let block = Block(imageNamed: "b_grass")
+    func generatePlatform() {
+        let block = Block(imageNamed: "b_wood")
         block.name = "platform"
-        block.scale(to: CGSize(width: 130, height: 60))
-        block.position = position
+        block.scale(to: CGSize(width: 130, height: 30))
+        block.position = CGPoint(x: CGFloat.random(in: frame.minX + block.size.width...frame.maxX - block.size.width), y: nextPlatformY)
+        nextPlatformY += block.size.height + nextAddY
 
         // Add physics to the platform
         block.physicsBody = SKPhysicsBody(texture: block.texture!, size: block.size)
@@ -220,6 +237,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         baseFloor.physicsBody?.allowsRotation = false
         baseFloor.zPosition = 1
         addChild(baseFloor)
+        nextPlatformY += nextAddY
         blocks.append(baseFloor)
     }
     
@@ -236,7 +254,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Player jumps
     func jump() {
-        player.physicsBody?.velocity = CGVector(dx: 0, dy: 1400)
+        player.physicsBody?.velocity = CGVector(dx: 0, dy: 700)
     }
     
     // MARK: - Pause button assignments
