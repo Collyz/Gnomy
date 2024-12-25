@@ -129,7 +129,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let newX = lerp(start: currentX, end: targetX, t: 0.2)
 
             if abs(newX - currentX) > 0.1 {
-                player.position.x = newX
+                // player.position.x = newX
+                player.run(SKAction.move(to: CGPoint(x: newX, y: player.position.y), duration: 0.001))
             }
         }
         
