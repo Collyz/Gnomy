@@ -23,7 +23,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     
     // Player
-    private let player = SKSpriteNode(imageNamed: "player")
+    private let player = Player(fileName: "player", size: CGSize(width: 64, height: 64), position: CGPoint(x: 0, y: 0))
     private var touchOffset: CGPoint?    // Touch offset
     
     private let cam = SKCameraNode()
@@ -44,6 +44,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     override func didMove(to view: SKView) {
+        addChild(player)
         // Debug
 //        let cameraFrame = CGRect(
 //                x: cam.position.x,
@@ -62,9 +63,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         nextPlatformY = -nextAddY
         generateBaseFloor(at: CGPoint(x: 0, y: nextPlatformY), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
-        createPlayer()
         addPauseButton()
-        nextPlatformY += nextAddY
+        nextPlatformY += nextAddY - 100
         while(blocks.count < 7) {
             generatePlatform()
         }
@@ -122,8 +122,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
+        // Camera movement
+        let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
+        if cam.position.y < targetY {
+            let moveAction = SKAction.moveTo(y: targetY, duration: 0.001)
+            cam.run(moveAction)
+            
+        }
+        
+        if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
+            // TODO: insert pause functionality and loss screen/restart
+            player.removeFromParent()
+        }
+        // Update background,pausebutton, and score
+        background.position.y = cam.position.y
+        scoreNode.position.y = cam.position.y + 600
+        pauseButton.position.y = cam.position.y + 700
         
         // Smoothly interpolate toward the target X position
+        // Side to side movement
         if let targetX = targetX {
             let currentX = player.position.x
             let newX = lerp(start: currentX, end: targetX, t: 0.2)
@@ -134,20 +151,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        // lerp camera movement
-        let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
-        let cameraMoveSpeed: CGFloat = 0.05
-        let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
-        cam.position.y = newY
-        if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
-            // TODO: insert pause functionality and loss screen/restart
-            player.removeFromParent()
-        }
+//        // lerp camera movement
+//        let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
+//        let cameraMoveSpeed: CGFloat = 0.05
+//        let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
+//        cam.position.y = newY
         
-        // Update background,pausebutton, and score
-        background.position.y = cam.position.y
-        scoreNode.position.y = cam.position.y + 600
-        pauseButton.position.y = cam.position.y + 700
+        
+        
+
 //        debugOutline.position.y = cam.position.y
         
         // Player moves through blocks if going up, else do not fall through
@@ -167,7 +179,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        // Removes blocks if past the bottom of the screen + 100 pixels, check didBegin for block generation
+        // Removes blocks out of view
         for block in blocks {
             if block.position.y < cam.position.y && cam.position.y - block.position.y  > self.bounds.height / 2 + 100 {
                 blocks.remove(at: blocks.firstIndex(of: block)!).removeFromParent()
@@ -224,30 +236,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     func lerp(start: CGFloat, end: CGFloat, t: CGFloat) -> CGFloat {
         return start + (end - start) * t
-    }
-
-    // MARK: - Player generation
-    func createPlayer() {
-        player.name = "player"
-        player.size = CGSize(width: 70, height: 70)
-        player.position = CGPoint(x: 0, y: 0)
-        
-        // Adding physics
-        player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
-        player.physicsBody?.isDynamic = true
-        player.physicsBody?.affectedByGravity = true
-        player.physicsBody?.allowsRotation = false
-        player.physicsBody?.restitution = 1
-        player.physicsBody?.linearDamping = 0.5
-        // Set physics category
-        player.physicsBody?.categoryBitMask = PhysicsCategory.player
-        player.physicsBody?.contactTestBitMask = PhysicsCategory.platform
-        player.physicsBody?.collisionBitMask = PhysicsCategory.platform
-        // Scaling
-        player.texture!.filteringMode = .nearest
-        // Appear above background
-        player.zPosition = 1
-        addChild(player)
     }
     
     // MARK: - Background assignments
