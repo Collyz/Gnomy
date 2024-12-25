@@ -34,22 +34,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Blocks
     private var blocks: Array<Block> = Array()
     
+    // Debug
+    private var debugOutline = SKShapeNode()
+    private let cameraVerticalOffset: CGFloat = 500 // Adjust this value to view lower
+    
     
     override func didMove(to view: SKView) {
+        // Debug
+        let cameraFrame = CGRect(
+                x: cam.position.x,
+                y: cam.position.y,
+                width: 10,
+                height: 10
+            )
+        debugOutline = SKShapeNode(rect: cameraFrame)
+        
         // this method is called when your game scene is ready to run
         physicsWorld.gravity = CGVector(dx: 0, dy: -5)
         physicsWorld.contactDelegate = self // Respond to contacts
         camera = cam
-        camera?.position = CGPoint(x: 0, y: -400)
+        cam.position = CGPoint(x: 0, y: 400)
         createBackground()
-        nextPlatformY += -1000
+        nextPlatformY = -nextAddY
         generateBaseFloor(at: CGPoint(x: 0, y: nextPlatformY), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         createPlayer()
         addPauseButton()
         generatePlatform()
-        
-        // TODO: Pregenerate blocks?? or Iteravely???
+        addCameraDebugOutline()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -103,7 +115,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
-    
+        
+        // TODO: fix camera update being every so slightly jumpy
+        let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
+        let cameraMoveSpeed: CGFloat = 0.01
+        let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
+        cam.position.y = newY
+        if cam.position.y - player.position.y > (self.bounds.height / 2) + 100 {
+            // TODO: insert pause functionality and loss screen/restart
+            player.removeFromParent()
+        }
+        
+        // Update background,pausebutton, and score
+        background.position.y = cam.position.y
+        scoreNode.position.y = cam.position.y + 600
+        pauseButton.position.y = cam.position.y + 700
+        debugOutline.position.y = cam.position.y
+        
         // Player moves through blocks if going up, else do not fall through
         if (player.physicsBody?.velocity.dy)! <= 0 {
             for block in blocks {
@@ -121,7 +149,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        // TODO: Generate the platforms if there are fewer than 3/4 platforms on the screen
+        // Removes blocks if past the bottom of the screen + 100 pixels, check didBegin for block generation
         for block in blocks {
             if block.position.y < cam.position.y && cam.position.y - block.position.y  > self.bounds.height / 2 + 100 {
                 blocks.remove(at: blocks.firstIndex(of: block)!).removeFromParent()
@@ -132,15 +160,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didSimulatePhysics() {
 //        print("camera frame maxY \(cam.frame.maxY), camera frame minY \(cam.frame.minY) player position y: \(player.position.y)")
 //        print(cam.frame.height)
-        if cam.position.y - player.position.y < 0 {
-            cam.position.y = player.position.y
-        } else if cam.position.y - player.position.y > (self.bounds.height / 2) + 100{
-            // TODO: insert pause functionality and loss screen
-            player.removeFromParent()
-        }
-        background.position.y = cam.position.y
-        scoreNode.position.y = cam.position.y + 400
-        pauseButton.position.y = cam.position.y + 600
+//        if cam.position.y - player.position.y < 0 {
+//            cam.position.y = player.position.y - 10
+//        } else if cam.position.y - player.position.y > (self.bounds.height / 2) + 100{
+//            // TODO: insert pause functionality and loss screen
+//            player.removeFromParent()
+//        }
+//        background.position.y = cam.position.y
+//        scoreNode.position.y = cam.position.y + 700
+//        pauseButton.position.y = cam.position.y + 600
+
     }
     
     // MARK: - Moves the player sideways based on player movement
@@ -166,7 +195,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func createPlayer() {
         player.name = "player"
         player.size = CGSize(width: 90, height: 90)
-        player.position = CGPoint(x: 0, y: -900)
+        player.position = CGPoint(x: 0, y: 0)
         
         // Adding physics
         player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
@@ -277,10 +306,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let platformNode = platformBody.node as? Block else { return }
         // make player jump up again
         if (contact.contactNormal.dy == -1 || platformNode.isBaseFloor || !platformNode.isBaseFloor) && firstTap {
+            jump()
+            // generate blocks so there are always 7
+            // TODO: Don't like the while block here, generate 7 at the start, then just call generatePlatform once
             while(blocks.count < 7) {
                 generatePlatform()
             }
-            jump()
+            // scoring
+            // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
             if platformNode.scored == false{
                 platformNode.scored = true
                 score += 1;
@@ -289,6 +322,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
     }
+    
+    func addCameraDebugOutline() {
+        debugOutline.strokeColor = .red // Visible color
+        debugOutline.lineWidth = 2 // Thickness of the outline
+        debugOutline.zPosition = 10 // Ensure it renders above other elements
+        
+        // Add the debug outline as a child of the camera
+//        cam.addChild(debugOutline)
+        addChild(debugOutline)
+    }
+
 
 }
 
