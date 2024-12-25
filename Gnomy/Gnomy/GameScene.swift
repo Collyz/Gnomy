@@ -21,10 +21,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var nextPlatformY: CGFloat = 0
     private let nextAddY: CGFloat = 200
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
+    private var touchOffset: CGPoint?
     
     // Player
     private let player = Player(fileName: "player", size: CGSize(width: 64, height: 64), position: CGPoint(x: 0, y: 0))
-    private var touchOffset: CGPoint?    // Touch offset
+        
     
     private let cam = SKCameraNode()
     private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
@@ -55,7 +56,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        debugOutline = SKShapeNode(rect: cameraFrame)
         
         // this method is called when your game scene is ready to run
-        physicsWorld.gravity = CGVector(dx: 0, dy: -5)
+        physicsWorld.gravity = CGVector(dx: 0, dy: -4)
         physicsWorld.contactDelegate = self // Respond to contacts
         camera = cam
         cam.position = CGPoint(x: 0, y: 400)
@@ -95,11 +96,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(tappedNode.name == "pauseButton") {
             isPaused = !isPaused
         } else if !firstTap{
-            jump()
+            player.jump()
             firstTap = true
         }
         
-        touchOffset = CGPoint(x: loc.x - player.position.x, y:loc.y - player.position.y)
+        touchOffset = touches.first!.location(in: self)
         
     }
     
@@ -109,75 +110,57 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         touchOffset = nil
     }
     
-    // called everytime a *move touch* is input
+    
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        // move on touch move
-        movePlayer(touches)
+        // called everytime a *move touch* is input
+        touchOffset = touches.first!.location(in: self)
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        //
+        // called when *move touch* ends
+        touchOffset = nil
     }
     
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
-        // Camera movement
+        
+        player.move(touching: touchOffset)
+        
+        // lerp camera movement
         let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
-        if cam.position.y < targetY {
-            let moveAction = SKAction.moveTo(y: targetY, duration: 0.001)
-            cam.run(moveAction)
-            
-        }
+        let cameraMoveSpeed: CGFloat = 0.05
+        let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
+        cam.position.y = newY
         
         if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
-            // TODO: insert pause functionality and loss screen/restart
-            player.removeFromParent()
-        }
+                   // TODO: insert pause functionality and loss screen/restart
+                   player.removeFromParent()
+               }
+        
         // Update background,pausebutton, and score
         background.position.y = cam.position.y
-        scoreNode.position.y = cam.position.y + 600
-        pauseButton.position.y = cam.position.y + 700
+        scoreNode.position.y = cam.position.y + 500
+        pauseButton.position.y = cam.position.y + 600
         
-        // Smoothly interpolate toward the target X position
-        // Side to side movement
-        if let targetX = targetX {
-            let currentX = player.position.x
-            let newX = lerp(start: currentX, end: targetX, t: 0.2)
-
-            if abs(newX - currentX) > 0.1 {
-                // player.position.x = newX
-                player.run(SKAction.move(to: CGPoint(x: newX, y: player.position.y), duration: 0.001))
-            }
-        }
-        
-//        // lerp camera movement
-//        let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
-//        let cameraMoveSpeed: CGFloat = 0.05
-//        let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
-//        cam.position.y = newY
-        
-        
-        
-
 //        debugOutline.position.y = cam.position.y
         
-        // Player moves through blocks if going up, else do not fall through
-        if (player.physicsBody?.velocity.dy)! <= 0 {
-            for block in blocks {
-                if(block.name != "floor") {
-                    block.physicsBody?.categoryBitMask = 1
-                    block.physicsBody?.collisionBitMask = 1
-                }
-            }
-        } else{
-            for block in blocks {
-                if(block.name != "floor") {
-                    block.physicsBody?.categoryBitMask = 0
-                    block.physicsBody?.collisionBitMask = 0
-                }
-            }
-        }
+//        // Player moves through blocks if going up, else do not fall through
+//        if (player.physicsBody?.velocity.dy)! <= 0 {
+//            for block in blocks {
+//                if(block.name != "floor") {
+//                    block.physicsBody?.categoryBitMask = 1
+//                    block.physicsBody?.collisionBitMask = 1
+//                }
+//            }
+//        } else{
+//            for block in blocks {
+//                if(block.name != "floor") {
+//                    block.physicsBody?.categoryBitMask = 0
+//                    block.physicsBody?.collisionBitMask = 0
+//                }
+//            }
+//        }
         
         // Removes blocks out of view
         for block in blocks {
@@ -200,38 +183,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        scoreNode.position.y = cam.position.y + 700
 //        pauseButton.position.y = cam.position.y + 600
 
-    }
-    
-    // MARK: - Moves the player sideways based on player movement
-//    func movePlayer(_ touches: Set<UITouch>) {
-//        // Moves player offset from touch (i.e. from finger)
-//        // TODO: lerp movement for smoothness
-//        guard let touch = touches.first else { return }
-//        let touchPos = touch.location(in: self)
-//        if let offset = touchOffset {
-//            var newPosition = CGPoint(x: touchPos.x - offset.x, y: player.position.y)
-//
-//            // Constrain the player's movement within screen bounds
-//            let leftBound = frame.minX + 100
-//            let rightBound = frame.maxX - 100
-//            newPosition.x = max(leftBound, min(newPosition.x, rightBound))
-//
-//            // Update the player's position
-//            player.position = newPosition
-//        }
-//    }
-    
-    func movePlayer(_ touches: Set<UITouch>) {
-        guard let touch = touches.first else { return }
-        let touchPos = touch.location(in: self)
-        if let offset = touchOffset {
-            let calculatedTargetX = touchPos.x - offset.x
-
-            // Constrain the player's movement within screen bounds
-            let leftBound = frame.minX + 60
-            let rightBound = frame.maxX - 60
-            targetX = max(leftBound, min(calculatedTargetX, rightBound))
-        }
     }
 
     func lerp(start: CGFloat, end: CGFloat, t: CGFloat) -> CGFloat {
@@ -258,12 +209,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Add physics to the platform
         block.physicsBody = SKPhysicsBody(texture: block.texture!, size: block.size)
         block.physicsBody?.isDynamic = false // Static platform
-//        block.physicsBody?.restitution = 0 // No bounce
+        block.physicsBody?.restitution = 0 // No bounce
         
         // Set physics category
-        player.physicsBody?.categoryBitMask = PhysicsCategory.platform
-        player.physicsBody?.contactTestBitMask = PhysicsCategory.player
-        player.physicsBody?.collisionBitMask = PhysicsCategory.player
+        block.physicsBody?.categoryBitMask = PhysicsCategory.platform
+        block.physicsBody?.contactTestBitMask = PhysicsCategory.player // Detect player contact
+        block.physicsBody?.collisionBitMask = PhysicsCategory.player // Allow collision with the player
         
         block.texture!.filteringMode = .nearest
         block.zPosition = 1
@@ -287,9 +238,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         baseFloor.zPosition = 1
         
         // Set physics category
-        player.physicsBody?.categoryBitMask = PhysicsCategory.platform
-        player.physicsBody?.contactTestBitMask = PhysicsCategory.player
-        player.physicsBody?.collisionBitMask = PhysicsCategory.player
+        baseFloor.physicsBody?.categoryBitMask = PhysicsCategory.platform
+        baseFloor.physicsBody?.contactTestBitMask = PhysicsCategory.player // Detect player contact
+        baseFloor.physicsBody?.collisionBitMask = PhysicsCategory.player // Allow collision with the player
+
         
         addChild(baseFloor)
         nextPlatformY += nextAddY
@@ -307,11 +259,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(scoreNode)
     }
     
-    // MARK: - Player jumps
-    func jump() {
-        player.physicsBody?.velocity = CGVector(dx: 0, dy: 700)
-    }
-    
     // MARK: - Pause button assignments
     func addPauseButton() {
         pauseButton.name = "pauseButton"
@@ -321,31 +268,55 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(pauseButton)
     }
     
-    // MARK: - Handles collission
+//    // MARK: - Handles collission
+//    func didBegin(_ contact: SKPhysicsContact) {
+//        // Determine which body is the player
+//        let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
+//        let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
+//        
+//        guard let platformNode = platformBody.node as? Block else { return }
+//        // make player jump up again
+//        if (contact.contactNormal.dy == -1 || platformNode.isBaseFloor || !platformNode.isBaseFloor) && firstTap {
+//            player.jump()
+//            // generate blocks so there are always 7
+//            // TODO: Don't like the while block here, generate 7 at the start, then just call generatePlatform once
+//            if blocks.count < 7 {
+//                generatePlatform()
+//            }
+//                        if platformNode.scored == false{
+//                platformNode.scored = true
+//                score += 1;
+//                guard let temp = self.childNode(withName: "score") as? SKLabelNode else { return }
+//                temp.text = String(score)
+//            }
+//        }
+//    }
+    
     func didBegin(_ contact: SKPhysicsContact) {
-        // Determine which body is the player
+        // Identify the player and platform in the collision
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
         let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
         
         guard let platformNode = platformBody.node as? Block else { return }
-        // make player jump up again
-        if (contact.contactNormal.dy == -1 || platformNode.isBaseFloor || !platformNode.isBaseFloor) && firstTap {
-            jump()
-            // generate blocks so there are always 7
-            // TODO: Don't like the while block here, generate 7 at the start, then just call generatePlatform once
-            while(blocks.count < 7) {
-                generatePlatform()
-            }
-            // scoring
-            // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
-            if platformNode.scored == false{
-                platformNode.scored = true
-                score += 1;
-                guard let temp = self.childNode(withName: "score") as? SKLabelNode else { return }
-                temp.text = String(score)
+        
+        // Ensure the player is landing on the top of the platform
+        if contact.contactNormal.dy < 0 {
+            // Player is falling onto the platform
+            if !platformNode.isBaseFloor {
+                player.jump()
+                
+                /// scoring
+                // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
+
+                if platformNode.scored == false {
+                    platformNode.scored = true
+                    score += 1
+                    scoreNode.text = String(score)
+                }
             }
         }
     }
+
     
 //    func addCameraDebugOutline() {
 //        debugOutline.strokeColor = .red // Visible color
