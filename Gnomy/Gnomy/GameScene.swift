@@ -10,8 +10,9 @@ import GameplayKit
 
 // Bitmask categories
 struct PhysicsCategory {
-    static let player: UInt32 = 0x1 << 0
-    static let platform: UInt32 = 0x1 << 1
+    static let none: UInt32 = 0x1 << 0
+    static let player: UInt32 = 0x1 << 1
+    static let platform: UInt32 = 0x1 << 2
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -22,6 +23,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private let nextAddY: CGFloat = 200
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     private var touchOffset: CGPoint?
+    private let pregenerateBlocks: Int = 60
     
     // Player
     private let player = Player(fileName: "player", size: CGSize(width: 64, height: 64), position: CGPoint(x: 0, y: 0))
@@ -66,7 +68,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         addPauseButton()
         nextPlatformY += nextAddY - 100
-        while(blocks.count < 7) {
+        while(blocks.count < pregenerateBlocks) {
             generatePlatform()
         }
 //        addCameraDebugOutline()
@@ -134,9 +136,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         cam.position.y = newY
         
         if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
-                   // TODO: insert pause functionality and loss screen/restart
-                   player.removeFromParent()
-               }
+            // TODO: insert pause functionality and loss screen/restart
+            player.removeFromParent()
+        }
         
         // Update background,pausebutton, and score
         background.position.y = cam.position.y
@@ -162,11 +164,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //            }
 //        }
         
+        if let body = player.physicsBody {
+            let dy = body.velocity.dy
+            if dy >= 0 {
+                body.collisionBitMask = 0
+            } else {
+                body.collisionBitMask = PhysicsCategory.platform
+            }
+        }
+        
         // Removes blocks out of view
         for block in blocks {
             if block.position.y < cam.position.y && cam.position.y - block.position.y  > self.bounds.height / 2 + 100 {
                 blocks.remove(at: blocks.firstIndex(of: block)!).removeFromParent()
             }
+        }
+        if blocks.count < pregenerateBlocks {
+            generatePlatform()
         }
     }
     
@@ -268,44 +282,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(pauseButton)
     }
     
-//    // MARK: - Handles collission
-//    func didBegin(_ contact: SKPhysicsContact) {
-//        // Determine which body is the player
-//        let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
-//        let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
-//        
-//        guard let platformNode = platformBody.node as? Block else { return }
-//        // make player jump up again
-//        if (contact.contactNormal.dy == -1 || platformNode.isBaseFloor || !platformNode.isBaseFloor) && firstTap {
-//            player.jump()
-//            // generate blocks so there are always 7
-//            // TODO: Don't like the while block here, generate 7 at the start, then just call generatePlatform once
-//            if blocks.count < 7 {
-//                generatePlatform()
-//            }
-//                        if platformNode.scored == false{
-//                platformNode.scored = true
-//                score += 1;
-//                guard let temp = self.childNode(withName: "score") as? SKLabelNode else { return }
-//                temp.text = String(score)
-//            }
-//        }
-//    }
-    
+    // MARK: - Handles collission
     func didBegin(_ contact: SKPhysicsContact) {
-        // Identify the player and platform in the collision
+        
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
         let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
         
         guard let platformNode = platformBody.node as? Block else { return }
-        
         // Ensure the player is landing on the top of the platform
         if contact.contactNormal.dy < 0 {
             // Player is falling onto the platform
             if !platformNode.isBaseFloor {
                 player.jump()
-                
-                /// scoring
+                // scoring
                 // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
 
                 if platformNode.scored == false {
@@ -315,6 +304,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
         }
+    }
+    
+    func didEnd(_ contact: SKPhysicsContact) {
+        
     }
 
     
