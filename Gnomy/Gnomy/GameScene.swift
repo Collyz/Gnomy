@@ -19,7 +19,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var firstTap = false // first jump check
     private var score: Int = 0
     private var nextPlatformY: CGFloat = 0
-    private let nextAddY: CGFloat = 250
+    private let nextAddY: CGFloat = 200
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     
     // Player
@@ -35,19 +35,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var blocks: Array<Block> = Array()
     
     // Debug
-    private var debugOutline = SKShapeNode()
-    private let cameraVerticalOffset: CGFloat = 500 // Adjust this value to view lower
+//    private var debugOutline = SKShapeNode()
+    private var targetX: CGFloat?
+    
+    // Camera
+    private let cameraVerticalOffset: CGFloat = 200
+    // Adjust this value to view lower
     
     
     override func didMove(to view: SKView) {
         // Debug
-        let cameraFrame = CGRect(
-                x: cam.position.x,
-                y: cam.position.y,
-                width: 10,
-                height: 10
-            )
-        debugOutline = SKShapeNode(rect: cameraFrame)
+//        let cameraFrame = CGRect(
+//                x: cam.position.x,
+//                y: cam.position.y,
+//                width: 10,
+//                height: 10
+//            )
+//        debugOutline = SKShapeNode(rect: cameraFrame)
         
         // this method is called when your game scene is ready to run
         physicsWorld.gravity = CGVector(dx: 0, dy: -5)
@@ -60,8 +64,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         createPlayer()
         addPauseButton()
-        generatePlatform()
-        addCameraDebugOutline()
+        nextPlatformY += nextAddY
+        while(blocks.count < 7) {
+            generatePlatform()
+        }
+//        addCameraDebugOutline()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -116,12 +123,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
         
-        // TODO: fix camera update being every so slightly jumpy
+        // Smoothly interpolate toward the target X position
+        if let targetX = targetX {
+            let currentX = player.position.x
+            let newX = lerp(start: currentX, end: targetX, t: 0.2)
+
+            if abs(newX - currentX) > 0.1 {
+                player.position.x = newX
+            }
+        }
+        
+        // lerp camera movement
         let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
-        let cameraMoveSpeed: CGFloat = 0.01
+        let cameraMoveSpeed: CGFloat = 0.05
         let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
         cam.position.y = newY
-        if cam.position.y - player.position.y > (self.bounds.height / 2) + 100 {
+        if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
             // TODO: insert pause functionality and loss screen/restart
             player.removeFromParent()
         }
@@ -130,7 +147,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 600
         pauseButton.position.y = cam.position.y + 700
-        debugOutline.position.y = cam.position.y
+//        debugOutline.position.y = cam.position.y
         
         // Player moves through blocks if going up, else do not fall through
         if (player.physicsBody?.velocity.dy)! <= 0 {
@@ -173,28 +190,45 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Moves the player sideways based on player movement
+//    func movePlayer(_ touches: Set<UITouch>) {
+//        // Moves player offset from touch (i.e. from finger)
+//        // TODO: lerp movement for smoothness
+//        guard let touch = touches.first else { return }
+//        let touchPos = touch.location(in: self)
+//        if let offset = touchOffset {
+//            var newPosition = CGPoint(x: touchPos.x - offset.x, y: player.position.y)
+//
+//            // Constrain the player's movement within screen bounds
+//            let leftBound = frame.minX + 100
+//            let rightBound = frame.maxX - 100
+//            newPosition.x = max(leftBound, min(newPosition.x, rightBound))
+//
+//            // Update the player's position
+//            player.position = newPosition
+//        }
+//    }
+    
     func movePlayer(_ touches: Set<UITouch>) {
-        // Moves player offset from touch (i.e. from finger)
         guard let touch = touches.first else { return }
         let touchPos = touch.location(in: self)
         if let offset = touchOffset {
-            var newPosition = CGPoint(x: touchPos.x - offset.x, y: player.position.y)
+            let calculatedTargetX = touchPos.x - offset.x
 
             // Constrain the player's movement within screen bounds
-            let leftBound = frame.minX + 100
-            let rightBound = frame.maxX - 100
-            newPosition.x = max(leftBound, min(newPosition.x, rightBound))
-
-            // Update the player's position
-            player.position = newPosition
+            let leftBound = frame.minX + 60
+            let rightBound = frame.maxX - 60
+            targetX = max(leftBound, min(calculatedTargetX, rightBound))
         }
     }
-    
-    
-    // MARK: - Player generations
+
+    func lerp(start: CGFloat, end: CGFloat, t: CGFloat) -> CGFloat {
+        return start + (end - start) * t
+    }
+
+    // MARK: - Player generation
     func createPlayer() {
         player.name = "player"
-        player.size = CGSize(width: 90, height: 90)
+        player.size = CGSize(width: 70, height: 70)
         player.position = CGPoint(x: 0, y: 0)
         
         // Adding physics
@@ -202,15 +236,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody?.isDynamic = true
         player.physicsBody?.affectedByGravity = true
         player.physicsBody?.allowsRotation = false
-        player.physicsBody?.restitution = 0 // No bounce
-        
+        player.physicsBody?.restitution = 1
+        player.physicsBody?.linearDamping = 0.5
         // Set physics category
         player.physicsBody?.categoryBitMask = PhysicsCategory.player
         player.physicsBody?.contactTestBitMask = PhysicsCategory.platform
         player.physicsBody?.collisionBitMask = PhysicsCategory.platform
-
+        // Scaling
         player.texture!.filteringMode = .nearest
-        player.zPosition = 0
+        // Appear above background
+        player.zPosition = 1
         addChild(player)
     }
     
@@ -234,7 +269,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Add physics to the platform
         block.physicsBody = SKPhysicsBody(texture: block.texture!, size: block.size)
         block.physicsBody?.isDynamic = false // Static platform
-        block.physicsBody?.restitution = 0 // No bounce
+//        block.physicsBody?.restitution = 0 // No bounce
         
         // Set physics category
         player.physicsBody?.categoryBitMask = PhysicsCategory.platform
@@ -323,15 +358,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func addCameraDebugOutline() {
-        debugOutline.strokeColor = .red // Visible color
-        debugOutline.lineWidth = 2 // Thickness of the outline
-        debugOutline.zPosition = 10 // Ensure it renders above other elements
-        
-        // Add the debug outline as a child of the camera
-//        cam.addChild(debugOutline)
-        addChild(debugOutline)
-    }
+//    func addCameraDebugOutline() {
+//        debugOutline.strokeColor = .red // Visible color
+//        debugOutline.lineWidth = 2 // Thickness of the outline
+//        debugOutline.zPosition = 10 // Ensure it renders above other elements
+//        
+//        // Add the debug outline as a child of the camera
+////        cam.addChild(debugOutline)
+//        addChild(debugOutline)
+//    }
 
 
 }
