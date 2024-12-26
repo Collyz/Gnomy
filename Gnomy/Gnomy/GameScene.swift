@@ -19,11 +19,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Game logic
     private var firstTap = false // first jump check
     private var score: Int = 0
-    private var nextPlatformY: CGFloat = 0
-    private let nextAddY: CGFloat = 200
+    private var nextPlatformY: CGFloat = -200
+    private let nextAddY: CGFloat = 280
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     private var touchOffset: CGPoint?
-    private let pregenerateBlocks: Int = 60
+    private let pregenerateBlocks: Int = 50
     private let blockSize: CGSize = CGSize(width: 80, height: 30)
     private let baseFloorSize: CGSize = CGSize(width: 700, height: 300)
     
@@ -91,20 +91,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addPauseButton()
 
         // Generate the base floor
-        generateBaseFloor(at: CGPoint(x: 0, y: -baseFloorSize.height), baseFloorSize)
-        
+        generateBaseFloor(at: CGPoint(x: 0, y: nextPlatformY), baseFloorSize)
+        player.position = CGPoint(x: 0, y: -(baseFloorSize.height / 2) + (player.size.height))
+        nextPlatformY = 210
         // Place the player on top of the base floor
-        player.position = CGPoint(x: 0, y: -(baseFloorSize.height / 2) + (player.size.height / 2))
+        
 
         // Generate initial platforms above the base floor
-        nextPlatformY = player.position.y + nextAddY
         while blocks.count < pregenerateBlocks {
             generatePlatform()
         }
+        print("floor and first platform dist: \(blocks[0].position.y - blocks[1].position.y)")
+        print("first platform and second platform dist: \(blocks[1].position.y - blocks[2].position.y)")
     }
 
     
-    
+    //floor and first platform dist: -600.0
+    //first platform and second platform dist: -200.0
     
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -207,18 +210,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func didSimulatePhysics() {
-//        print("camera frame maxY \(cam.frame.maxY), camera frame minY \(cam.frame.minY) player position y: \(player.position.y)")
-//        print(cam.frame.height)
-//        if cam.position.y - player.position.y < 0 {
-//            cam.position.y = player.position.y - 10
-//        } else if cam.position.y - player.position.y > (self.bounds.height / 2) + 100{
-//            // TODO: insert pause functionality and loss screen
-//            player.removeFromParent()
-//        }
-//        background.position.y = cam.position.y
-//        scoreNode.position.y = cam.position.y + 700
-//        pauseButton.position.y = cam.position.y + 600
-
+        
     }
 
     func lerp(start: CGFloat, end: CGFloat, t: CGFloat) -> CGFloat {
@@ -252,8 +244,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Starting Floor Generation
-    func generateBaseFloor(at position: CGPoint, _ dimensions: CGSize) {
-        let baseFloor = Block("b_grass", dimensions, position, nextAddY, &nextPlatformY)
+    func generateBaseFloor(at position: CGPoint, _ size: CGSize) {
+        let baseFloor = Block("b_grass", size, position, nextAddY, &nextPlatformY)
+        baseFloor.name = "floor"
         baseFloor.physicsBody?.categoryBitMask = PhysicsCategory.platform
         baseFloor.physicsBody?.collisionBitMask = PhysicsCategory.player
         baseFloor.isBaseFloor = true // Mark it as the base floor for logic checks

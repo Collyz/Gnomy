@@ -17,7 +17,6 @@ class Block: SKSpriteNode{
         self.name = "platform"
         self.scale(to: size)
         self.position = position
-        nextPlatformY += nextAddY
 
         // Add physics to the platform
         self.physicsBody = SKPhysicsBody(texture: self.texture!, size: self.size)
@@ -31,6 +30,7 @@ class Block: SKSpriteNode{
         
         self.texture!.filteringMode = .nearest
         self.zPosition = 1
+        nextPlatformY += nextAddY
     }
     
     required init?(coder aDecoder: NSCoder) {
