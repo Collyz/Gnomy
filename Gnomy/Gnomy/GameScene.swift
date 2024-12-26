@@ -24,10 +24,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     private var touchOffset: CGPoint?
     private let pregenerateBlocks: Int = 60
+    private let blockSize: CGSize = CGSize(width: 80, height: 30)
+    private let baseFloorSize: CGSize = CGSize(width: 700, height: 300)
     
     // Player
     private let player = Player(fileName: "player", size: CGSize(width: 64, height: 64), position: CGPoint(x: 0, y: 0))
-        
     
     private let cam = SKCameraNode()
     private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
@@ -40,39 +41,71 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Debug
 //    private var debugOutline = SKShapeNode()
     private var targetX: CGFloat?
-    
     // Camera
     private let cameraVerticalOffset: CGFloat = 200
     // Adjust this value to view lower
     
     
+//    override func didMove(to view: SKView) {
+//        // this method is called when your game scene is ready to run
+//        player.position = CGPoint(x: 0, y: player.size.height)
+//        addChild(player)
+//        // Debug
+////        let cameraFrame = CGRect(
+////                x: cam.position.x,
+////                y: cam.position.y,
+////                width: 10,
+////                height: 10
+////            )
+////        debugOutline = SKShapeNode(rect: cameraFrame)
+//        
+//        // world physics settings
+//        physicsWorld.gravity = CGVector(dx: 0, dy: -4)
+//        physicsWorld.contactDelegate = self // Responds to collissions
+//        
+//        camera = cam
+//        cam.position = CGPoint(x: 0, y: 400)
+//        
+//        createBackground()
+//        displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
+//        addPauseButton()
+//        print(player.position.y)
+//        
+//        generateBaseFloor(at: CGPoint(x: 0, y: -(baseFloorSize.height)), baseFloorSize)
+//        nextPlatformY += nextAddY - player.position.y
+//        while(blocks.count < pregenerateBlocks) {
+//            generatePlatform()
+//        }
+////        addCameraDebugOutline()
+//    }
+    
     override func didMove(to view: SKView) {
+        // Set up the scene and player
         addChild(player)
-        // Debug
-//        let cameraFrame = CGRect(
-//                x: cam.position.x,
-//                y: cam.position.y,
-//                width: 10,
-//                height: 10
-//            )
-//        debugOutline = SKShapeNode(rect: cameraFrame)
-        
-        // this method is called when your game scene is ready to run
         physicsWorld.gravity = CGVector(dx: 0, dy: -4)
-        physicsWorld.contactDelegate = self // Respond to contacts
+        physicsWorld.contactDelegate = self
         camera = cam
         cam.position = CGPoint(x: 0, y: 400)
         createBackground()
-        nextPlatformY = -nextAddY
-        generateBaseFloor(at: CGPoint(x: 0, y: nextPlatformY), CGSize(width: 700, height: 200))
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         addPauseButton()
-        nextPlatformY += nextAddY - 100
-        while(blocks.count < pregenerateBlocks) {
+
+        // Generate the base floor
+        generateBaseFloor(at: CGPoint(x: 0, y: -baseFloorSize.height), baseFloorSize)
+        
+        // Place the player on top of the base floor
+        player.position = CGPoint(x: 0, y: -(baseFloorSize.height / 2) + (player.size.height / 2))
+
+        // Generate initial platforms above the base floor
+        nextPlatformY = player.position.y + nextAddY
+        while blocks.count < pregenerateBlocks {
             generatePlatform()
         }
-//        addCameraDebugOutline()
     }
+
+    
+    
+    
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user touches the screen
@@ -108,7 +141,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user stops touching the screen
-        
         touchOffset = nil
     }
     
@@ -126,9 +158,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
-        
         player.move(touching: touchOffset)
-        
         // lerp camera movement
         let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
         let cameraMoveSpeed: CGFloat = 0.05
@@ -173,15 +203,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        // Removes blocks out of view
-        for block in blocks {
-            if block.position.y < cam.position.y && cam.position.y - block.position.y  > self.bounds.height / 2 + 100 {
-                blocks.remove(at: blocks.firstIndex(of: block)!).removeFromParent()
-            }
-        }
-        if blocks.count < pregenerateBlocks {
-            generatePlatform()
-        }
+
     }
     
     override func didSimulatePhysics() {
@@ -214,51 +236,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Platform Generation
     func generatePlatform() {
-        let block = Block(imageNamed: blockNames[score / 100])
-        block.name = "platform"
-        block.scale(to: CGSize(width: 130, height: 30))
-        block.position = CGPoint(x: CGFloat.random(in: frame.minX + block.size.width...frame.maxX - block.size.width), y: nextPlatformY)
-        nextPlatformY += block.size.height + nextAddY
-
-        // Add physics to the platform
-        block.physicsBody = SKPhysicsBody(texture: block.texture!, size: block.size)
-        block.physicsBody?.isDynamic = false // Static platform
-        block.physicsBody?.restitution = 0 // No bounce
-        
-        // Set physics category
-        block.physicsBody?.categoryBitMask = PhysicsCategory.platform
-        block.physicsBody?.contactTestBitMask = PhysicsCategory.player // Detect player contact
-        block.physicsBody?.collisionBitMask = PhysicsCategory.player // Allow collision with the player
-        
-        block.texture!.filteringMode = .nearest
-        block.zPosition = 1
+        let blockPos = CGPoint(
+            x: CGFloat.random(in: frame.minX + blockSize.width...frame.maxX - blockSize.width),
+            y: nextPlatformY
+        )
+        let block = Block(
+            blockNames[score/100],
+            blockSize,
+            blockPos,
+            nextAddY,
+            &nextPlatformY
+        )
         addChild(block)
         blocks.append(block)
     }
     
     // MARK: - Starting Floor Generation
     func generateBaseFloor(at position: CGPoint, _ dimensions: CGSize) {
-        let baseFloor = Block(imageNamed: "b_grass")
-        baseFloor.scored = true
-        baseFloor.isBaseFloor = true
-        baseFloor.name = "floor"
-        baseFloor.scale(to: dimensions)
-        baseFloor.position = position
-        
-        // Add physics to floor
-        baseFloor.physicsBody = SKPhysicsBody(texture: baseFloor.texture!, size: baseFloor.size)
-        baseFloor.physicsBody?.isDynamic = false
-        baseFloor.physicsBody?.allowsRotation = false
-        baseFloor.zPosition = 1
-        
-        // Set physics category
+        let baseFloor = Block("b_grass", dimensions, position, nextAddY, &nextPlatformY)
         baseFloor.physicsBody?.categoryBitMask = PhysicsCategory.platform
-        baseFloor.physicsBody?.contactTestBitMask = PhysicsCategory.player // Detect player contact
-        baseFloor.physicsBody?.collisionBitMask = PhysicsCategory.player // Allow collision with the player
-
-        
+        baseFloor.physicsBody?.collisionBitMask = PhysicsCategory.player
+        baseFloor.isBaseFloor = true // Mark it as the base floor for logic checks
         addChild(baseFloor)
-        nextPlatformY += nextAddY
         blocks.append(baseFloor)
     }
     

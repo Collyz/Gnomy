@@ -17,7 +17,7 @@ class Player: SKSpriteNode {
 
         self.name = "player"
         self.position = position
-        self.zPosition = 0
+        self.zPosition = 2
         
         // Add physics
         self.physicsBody = SKPhysicsBody(texture: texture, size: size)
