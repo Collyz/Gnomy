@@ -19,13 +19,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Game logic
     private var firstTap = false // first jump check
     private var score: Int = 0
-    private var nextPlatformY: CGFloat = -200
+    private var platformY: CGFloat = -200
     private let nextAddY: CGFloat = 280
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     private var touchOffset: CGPoint?
     private let pregenerateBlocks: Int = 50
-    private let blockSize: CGSize = CGSize(width: 80, height: 30)
-    private let baseFloorSize: CGSize = CGSize(width: 700, height: 300)
+    private var platformSize: CGSize?
+    private var baseFloorSize: CGSize?
     
     // Player
     private let player = Player(fileName: "player", size: CGSize(width: 64, height: 64), position: CGPoint(x: 0, y: 0))
@@ -45,40 +45,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private let cameraVerticalOffset: CGFloat = 200
     // Adjust this value to view lower
     
-    
-//    override func didMove(to view: SKView) {
-//        // this method is called when your game scene is ready to run
-//        player.position = CGPoint(x: 0, y: player.size.height)
-//        addChild(player)
-//        // Debug
-////        let cameraFrame = CGRect(
-////                x: cam.position.x,
-////                y: cam.position.y,
-////                width: 10,
-////                height: 10
-////            )
-////        debugOutline = SKShapeNode(rect: cameraFrame)
-//        
-//        // world physics settings
-//        physicsWorld.gravity = CGVector(dx: 0, dy: -4)
-//        physicsWorld.contactDelegate = self // Responds to collissions
-//        
-//        camera = cam
-//        cam.position = CGPoint(x: 0, y: 400)
-//        
-//        createBackground()
-//        displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
-//        addPauseButton()
-//        print(player.position.y)
-//        
-//        generateBaseFloor(at: CGPoint(x: 0, y: -(baseFloorSize.height)), baseFloorSize)
-//        nextPlatformY += nextAddY - player.position.y
-//        while(blocks.count < pregenerateBlocks) {
-//            generatePlatform()
-//        }
-////        addCameraDebugOutline()
-//    }
-    
     override func didMove(to view: SKView) {
         // Set up the scene and player
         addChild(player)
@@ -89,20 +55,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createBackground()
         displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
         addPauseButton()
+        baseFloorSize = CGSize(width: self.bounds.width, height: 300)
+        platformSize = CGSize(width: self.bounds.width/10, height: 30)
 
         // Generate the base floor
-        generateBaseFloor(at: CGPoint(x: 0, y: nextPlatformY), baseFloorSize)
-        player.position = CGPoint(x: 0, y: -(baseFloorSize.height / 2) + (player.size.height))
-        nextPlatformY = 210
-        // Place the player on top of the base floor
+        generateBaseFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
+        player.position = CGPoint(x: 0, y: (-(baseFloorSize!.height / 2)) + (player.size.height) + player.size.height + 10) // set player on top of floor
+        platformY = 210 //found manually setting nextPlatformY
         
-
         // Generate initial platforms above the base floor
         while blocks.count < pregenerateBlocks {
             generatePlatform()
         }
-        print("floor and first platform dist: \(blocks[0].position.y - blocks[1].position.y)")
-        print("first platform and second platform dist: \(blocks[1].position.y - blocks[2].position.y)")
+        print(blocks[1].position)
     }
 
     
@@ -167,7 +132,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let cameraMoveSpeed: CGFloat = 0.05
         let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
         cam.position.y = newY
-        
+        // lose if fall below cam
         if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
             // TODO: insert pause functionality and loss screen/restart
             player.removeFromParent()
@@ -229,15 +194,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Platform Generation
     func generatePlatform() {
         let blockPos = CGPoint(
-            x: CGFloat.random(in: frame.minX + blockSize.width...frame.maxX - blockSize.width),
-            y: nextPlatformY
+            x: CGFloat.random(in: frame.minX + platformSize!.width...frame.maxX - platformSize!.width),
+            y: platformY
         )
         let block = Block(
             blockNames[score/100],
-            blockSize,
+            platformSize!,
             blockPos,
             nextAddY,
-            &nextPlatformY
+            &platformY
         )
         addChild(block)
         blocks.append(block)
@@ -245,7 +210,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Starting Floor Generation
     func generateBaseFloor(at position: CGPoint, _ size: CGSize) {
-        let baseFloor = Block("b_grass", size, position, nextAddY, &nextPlatformY)
+        let baseFloor = Block("b_grass", size, position, nextAddY, &platformY)
         baseFloor.name = "floor"
         baseFloor.physicsBody?.categoryBitMask = PhysicsCategory.platform
         baseFloor.physicsBody?.collisionBitMask = PhysicsCategory.player
@@ -282,7 +247,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         guard let platformNode = platformBody.node as? Block else { return }
         // Ensure the player is landing on the top of the platform
-        if contact.contactNormal.dy < 0 {
+        if contact.contactNormal.dy > 0 {
             // Player is falling onto the platform
             if !platformNode.isBaseFloor {
                 player.jump()

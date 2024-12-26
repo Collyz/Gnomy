@@ -9,7 +9,7 @@ class Block: SKSpriteNode{
     public var scored: Bool = false;
     public var isBaseFloor: Bool = false;
     
-    init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat, _ nextPlatformY: inout CGFloat)
+    init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat, _ platformY: inout CGFloat)
     {
         let texture = SKTexture(imageNamed: filename)
         super.init(texture: texture, color: .clear, size: size)
@@ -17,9 +17,13 @@ class Block: SKSpriteNode{
         self.name = "platform"
         self.scale(to: size)
         self.position = position
+        platformY += nextAddY
 
         // Add physics to the platform
-        self.physicsBody = SKPhysicsBody(texture: self.texture!, size: self.size)
+        // Add physics to only the top of the platform
+        let topLeftPoint = CGPoint(x: -size.width / 2, y: size.height / 2) // Top-left relative to the platform
+        let topRightPoint = CGPoint(x: size.width / 2, y: size.height / 2) // Top-right relative to the platform
+        self.physicsBody = SKPhysicsBody(edgeFrom: topLeftPoint, to: topRightPoint)
         self.physicsBody?.isDynamic = false // Static platform
         self.physicsBody?.restitution = 0 // No bounce
         
@@ -30,7 +34,7 @@ class Block: SKSpriteNode{
         
         self.texture!.filteringMode = .nearest
         self.zPosition = 1
-        nextPlatformY += nextAddY
+        
     }
     
     required init?(coder aDecoder: NSCoder) {
