@@ -57,14 +57,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.contactDelegate = self
         camera = cam
         cam.position = CGPoint(x: 0, y: 400)
-        createBackground()
-        displayScore(at: CGPoint(x: frame.midX, y: frame.midY))
-        addPauseButton()
+        createBg()
+        createScoreLabel(at: CGPoint(x: frame.midX, y: frame.midY))
+        createPauseButton()
         baseFloorSize = CGSize(width: self.bounds.width, height: 300)
         platformSize = CGSize(width: self.bounds.width/10, height: 30)
 
         // Generate the base floor
-        generateBaseFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
+        createBFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
         player.position = CGPoint(x: 0,
                                   y: (-(baseFloorSize!.height / 2)) + (player.size.height)
                                   + player.size.height + 10) // set player on top of floor
@@ -72,7 +72,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Generate initial platforms above the base floor
         while blocks.count < pregenerateBlocks {
-            generatePlatform()
+            createPlatform()
         }
         
         getAudio()
@@ -146,6 +146,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
+        // TODO: Generate the blocks
+        
+        
+        
 
     }
     
@@ -158,23 +162,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Background assignments
-    func createBackground() {
+    func createBg() {
         // Background
         background = Background("background", CGSize(width: 620, height: 1400))
         addChild(background!)
     }
     
     // MARK: - Platform Generation
-    func generatePlatform() {
+    func createPlatform() {
         let blockPos = CGPoint(
             x: CGFloat.random(in: frame.minX + platformSize!.width...frame.maxX - platformSize!.width),
             y: platformY
         )
         
-        let block = Block(
-            blockNames[(score / 100) % blockNames.count],
-            platformSize!,
-            blockPos,
+        let block = Block(blockNames[(score / 100) % blockNames.count], platformSize!, blockPos,
             nextAddY,
             &platformY
         )
@@ -183,7 +184,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Starting Floor Generation
-    func generateBaseFloor(at position: CGPoint, _ size: CGSize) {
+    func createBFloor(at position: CGPoint, _ size: CGSize) {
         let baseFloor = Block(blockNames[0], size, position, nextAddY, &platformY)
         baseFloor.name = "floor"
         baseFloor.isBaseFloor = true // Mark it as the base floor for logic checks
@@ -192,7 +193,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: Score Display
-    func displayScore( at position: CGPoint) {
+    func createScoreLabel( at position: CGPoint) {
         scoreNode.name = "score"
         scoreNode.text = String(self.score)
         scoreNode.fontSize = 65
@@ -203,7 +204,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Pause button assignments
-    func addPauseButton() {
+    func createPauseButton() {
         pauseButton.name = "pauseButton"
         pauseButton.size = CGSize(width: 50, height: 50)
         pauseButton.position = CGPoint(x: 230, y: 0)
