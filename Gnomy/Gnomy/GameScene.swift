@@ -117,18 +117,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
+        // this method is called before each frame is rendered (https://developer.apple.com/documentation/spritekit/responding-to-frame-cycle-events)
+        // Generate and remove blocks
         for block in blocks {
             if cam.position.y - (block.position.y - block.size.height) > (self.bounds.height / 2) + 100{
+                if(block.scored == false) {
+                    scoreUpdate(true)
+                    block.scored = true;
+                }
                 blocks.remove(at: blocks.firstIndex(of: block)!)
                 block.removeFromParent()
             }
         }
-        
         if blocks.count < 7 {
             createPlatform()
         }
-        
-        // this method is called before each frame is rendered
+        // move the player
         player.move(touching: touchOffset)
         // lerp camera movement
         let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
@@ -139,7 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
             // TODO: insert pause functionality and loss screen/restart
             player.removeFromParent()
-            resetGame()
+            resetGame() // TODO: remove later
         }
         
         // Update background,pausebutton, and score
@@ -158,15 +162,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        // TODO: Generate the blocks
-        
         
         
 
-    }
-    
-    override func didSimulatePhysics() {
-        
     }
 
     func lerp(start: CGFloat, end: CGFloat, t: CGFloat) -> CGFloat {
@@ -239,8 +237,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
             if platformNode.scored == false && !platformNode.isBaseFloor {
                 platformNode.scored = true
-                score += 1
-                scoreNode.text = String(score)
+                scoreUpdate(true)
             }
         }
     }
@@ -253,12 +250,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // TODO: - Proper reset: RESETS score, camera, player, regenerates platforms, [recyle pause, scorelabelnode and background?]
     func resetGame() {
         pauseGame()
-        score = 0
+        scoreUpdate(false)
         for block in blocks {
-            block.scored = false
+            block.removeFromParent()
         }
+        blocks.removeAll()
+        platformY = 210
         pauseGame()
-        scoreNode.text = String(score)
         player.resignFirstResponder()
         cam.position = CGPoint(x: 0, y: 400)
         player.position = CGPoint(x: 0, y: 0)
@@ -309,7 +307,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Pauses the game
     func pauseGame() {
         isPaused = !isPaused
-        
+        // TODO: Pause menu
+    }
+    
+    func scoreUpdate(_ increment: Bool) {
+        if(increment) {
+            score+=1
+            scoreNode.text = String(score)
+        } else {
+            score = 0
+            scoreNode.text = String(score)
+        }
     }
 
 
