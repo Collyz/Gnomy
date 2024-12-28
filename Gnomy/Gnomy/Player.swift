@@ -9,6 +9,7 @@ import SpriteKit
 
 class Player: SKSpriteNode {
     private let moveSpeed: CGFloat = 4;
+    private var feetHitBox: SKSpriteNode!
     
     init(fileName: String, size: CGSize, position: CGPoint = CGPoint.zero) {
         let texture = SKTexture(imageNamed: fileName)
@@ -19,8 +20,9 @@ class Player: SKSpriteNode {
         self.position = position
         self.zPosition = 2
         
+        // TODO: REMOVE player hitbox *FOR NOW* so weird jumps don't occur
         // Add physics
-        self.physicsBody = SKPhysicsBody(texture: texture, size: size)
+        self.physicsBody = SKPhysicsBody(rectangleOf: size)
         self.physicsBody?.isDynamic = true
         self.physicsBody?.affectedByGravity = true
         self.physicsBody?.allowsRotation = false
@@ -29,12 +31,35 @@ class Player: SKSpriteNode {
         
         // Physics categories
         self.physicsBody?.categoryBitMask = PhysicsCategory.player
-        self.physicsBody?.contactTestBitMask = PhysicsCategory.platform // Detect contact with platforms
-        self.physicsBody?.collisionBitMask = PhysicsCategory.platform // Allow physical collision with platforms
+        self.physicsBody?.contactTestBitMask = PhysicsCategory.none // Detect contact with platforms
+        self.physicsBody?.collisionBitMask = PhysicsCategory.none // Allow physical collision with platforms
+        
+        // Add a thin hitbox for the player's feet
+        addFeetHitbox(size: size)
     }
+    
+    
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Add a thin hitbox to the player's feet
+    private func addFeetHitbox(size: CGSize) {
+        let hitboxHeight: CGFloat = 5 // Thin hitbox height
+        let hitboxSize = CGSize(width: size.width * 0.8, height: hitboxHeight) // Slightly smaller than the player's width
+        feetHitBox = SKSpriteNode(color: .clear, size: hitboxSize) // Invisible hitbox
+        feetHitBox.name = "hitbox"
+        feetHitBox.position = CGPoint(x: 0, y: -size.height / 2 - hitboxHeight / 2) // Just below the player's main body
+        feetHitBox.zPosition = self.zPosition - 1
+
+        feetHitBox.physicsBody = SKPhysicsBody(rectangleOf: hitboxSize)
+        feetHitBox.physicsBody?.isDynamic = false // Static physics body
+        feetHitBox.physicsBody?.categoryBitMask = PhysicsCategory.none // Same category as the player
+        feetHitBox.physicsBody?.contactTestBitMask = PhysicsCategory.none // Detect contact with platforms
+        feetHitBox.physicsBody?.collisionBitMask = PhysicsCategory.none // No collisions, only contacts
+
+        self.addChild(feetHitBox) // Add the hitbox as a child node of the player
     }
     
     // MARK: - Based on the distance from the player and the touch, move the player

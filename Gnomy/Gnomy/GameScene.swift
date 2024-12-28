@@ -7,6 +7,7 @@
 
 import SpriteKit
 import GameplayKit
+import AVFoundation
 
 // Bitmask categories
 struct PhysicsCategory {
@@ -27,12 +28,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var platformSize: CGSize?
     private var baseFloorSize: CGSize?
     
+    // Game Audio
+    private var backgroundMusicPlayer: AVAudioPlayer? = nil
+    
     // Player
     private let player = Player(fileName: "player", size: CGSize(width: 64, height: 64), position: CGPoint(x: 0, y: 0))
     
+    // Nonplayer nodes
     private let cam = SKCameraNode()
     private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
-    private let background = SKSpriteNode(imageNamed: "background")
+    private var background: SKSpriteNode?
     private let pauseButton = SKSpriteNode(imageNamed: "pause")
     
     // Blocks
@@ -60,36 +65,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         // Generate the base floor
         generateBaseFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
-        player.position = CGPoint(x: 0, y: (-(baseFloorSize!.height / 2)) + (player.size.height) + player.size.height + 10) // set player on top of floor
+        player.position = CGPoint(x: 0,
+                                  y: (-(baseFloorSize!.height / 2)) + (player.size.height)
+                                  + player.size.height + 10) // set player on top of floor
         platformY = 210 //found manually setting nextPlatformY
         
         // Generate initial platforms above the base floor
         while blocks.count < pregenerateBlocks {
             generatePlatform()
         }
-        print(blocks[1].position)
+        
+        getAudio()
     }
-
-    
-    //floor and first platform dist: -600.0
-    //first platform and second platform dist: -200.0
-    
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user touches the screen
-        // -----
-//        guard let touch = touches.first else { return }
-//        let location = touch.location(in: self)
-//        let tappedNode = nodes(at: location) //allows you to get the nodes quite easily
-//        guard let tapped = tappedNode.first else { return }
-//        
-//        if tapped.name != "background" {
-//            tapped.removeFromParent()
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                self.generateCollectable()
-//            }
-//        }
-        // -----
         
         // Code block to update the touchOffset of the player
         guard let touch = touches.first else { return }
@@ -97,7 +87,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let tappedNode = atPoint(loc)
         // Jump only on the first tap to the screen that isn't on the pause button
         if(tappedNode.name == "pauseButton") {
-            isPaused = !isPaused
+            pauseGame()
+            playAudio()
         } else if !firstTap{
             player.jump()
             firstTap = true
@@ -136,33 +127,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
             // TODO: insert pause functionality and loss screen/restart
             player.removeFromParent()
+            resetGame()
         }
         
         // Update background,pausebutton, and score
-        background.position.y = cam.position.y
+        background!.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + 500
         pauseButton.position.y = cam.position.y + 600
         
 //        debugOutline.position.y = cam.position.y
         
-//        // Player moves through blocks if going up, else do not fall through
-//        if (player.physicsBody?.velocity.dy)! <= 0 {
-//            for block in blocks {
-//                if(block.name != "floor") {
-//                    block.physicsBody?.categoryBitMask = 1
-//                    block.physicsBody?.collisionBitMask = 1
-//                }
-//            }
-//        } else{
-//            for block in blocks {
-//                if(block.name != "floor") {
-//                    block.physicsBody?.categoryBitMask = 0
-//                    block.physicsBody?.collisionBitMask = 0
-//                }
-//            }
-//        }
-        
-        if let body = player.physicsBody {
+        if let body = player.childNode(withName: "hitbox")?.physicsBody {
             let dy = body.velocity.dy
             if dy >= 0 {
                 body.collisionBitMask = 0
@@ -185,10 +160,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Background assignments
     func createBackground() {
         // Background
-        background.name = "background"
-        background.zPosition = -1
-        background.scale(to: CGSize(width: 620, height: 1400))
-        addChild(background)
+        background = Background("background", CGSize(width: 620, height: 1400))
+        addChild(background!)
     }
     
     // MARK: - Platform Generation
@@ -197,8 +170,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             x: CGFloat.random(in: frame.minX + platformSize!.width...frame.maxX - platformSize!.width),
             y: platformY
         )
+        
         let block = Block(
-            blockNames[score/100],
+            blockNames[(score / 100) % blockNames.count],
             platformSize!,
             blockPos,
             nextAddY,
@@ -210,10 +184,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Starting Floor Generation
     func generateBaseFloor(at position: CGPoint, _ size: CGSize) {
-        let baseFloor = Block("b_grass", size, position, nextAddY, &platformY)
+        let baseFloor = Block(blockNames[0], size, position, nextAddY, &platformY)
         baseFloor.name = "floor"
-        baseFloor.physicsBody?.categoryBitMask = PhysicsCategory.platform
-        baseFloor.physicsBody?.collisionBitMask = PhysicsCategory.player
         baseFloor.isBaseFloor = true // Mark it as the base floor for logic checks
         addChild(baseFloor)
         blocks.append(baseFloor)
@@ -249,22 +221,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Ensure the player is landing on the top of the platform
         if contact.contactNormal.dy > 0 {
             // Player is falling onto the platform
-            if !platformNode.isBaseFloor {
-                player.jump()
-                // scoring
-                // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
+            player.jump()
+            // scoring
+            // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
 
-                if platformNode.scored == false {
-                    platformNode.scored = true
-                    score += 1
-                    scoreNode.text = String(score)
-                }
+            if platformNode.scored == false && !platformNode.isBaseFloor {
+                platformNode.scored = true
+                score += 1
+                scoreNode.text = String(score)
             }
         }
     }
     
+    // After collision end
     func didEnd(_ contact: SKPhysicsContact) {
         
+    }
+    
+    // TODO: - Proper reset: RESETS score, camera, player, regenerates platforms, [recyle pause, scorelabelnode and background?]
+    func resetGame() {
+        pauseGame()
+        score = 0
+        for block in blocks {
+            block.scored = false
+        }
+        pauseGame()
+        scoreNode.text = String(score)
+        player.resignFirstResponder()
+        cam.position = CGPoint(x: 0, y: 400)
+        player.position = CGPoint(x: 0, y: 0)
+        addChild(player)
+        firstTap = false
     }
 
     
@@ -277,6 +264,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 ////        cam.addChild(debugOutline)
 //        addChild(debugOutline)
 //    }
+    
+    
+    // MARK: Gets the audio file and makes sure the audio isn't nil
+    func getAudio() {
+        guard let musicURL = Bundle.main.url(forResource: "bg_sound_1", withExtension: "wav") else {
+            print("music file not found")
+            return
+        }
+        
+        do {
+            backgroundMusicPlayer = try AVAudioPlayer(contentsOf: musicURL)
+            backgroundMusicPlayer!.numberOfLoops = -1 // infinite loop
+            backgroundMusicPlayer!.prepareToPlay()
+            backgroundMusicPlayer!.volume = 0.5
+            playAudio()
+        } catch {
+            print("failed to initialize AVAudioPlayer: \(error.localizedDescription)")
+        }
+    }
+    
+    
+    // MARK: - Audio play/pause
+    func playAudio() {
+        if !backgroundMusicPlayer!.isPlaying {
+            backgroundMusicPlayer!.play()
+        } else {
+            backgroundMusicPlayer!.pause()
+        }
+    }
+    
+    // MARK: - Pauses the game
+    func pauseGame() {
+        isPaused = !isPaused
+        
+    }
 
 
 }
