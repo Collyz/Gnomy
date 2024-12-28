@@ -16,7 +16,11 @@ struct PhysicsCategory {
     static let platform: UInt32 = 0x1 << 2
 }
 
+let blockAtlas = SKTextureAtlas(named: "Blocks")
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    // Block Atlas
+    
     // Game logic
     private var firstTap = false // first jump check
     private var score: Int = 0
@@ -24,7 +28,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private let nextAddY: CGFloat = 280
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     private var touchOffset: CGPoint?
-    private let pregenerateBlocks: Int = 50
+//    private let pregenerateBlocks: Int = 1
     private var platformSize: CGSize?
     private var baseFloorSize: CGSize?
     
@@ -64,16 +68,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         platformSize = CGSize(width: self.bounds.width/10, height: 30)
 
         // Generate the base floor
-        createBFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
+        createBaseFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
         player.position = CGPoint(x: 0,
                                   y: (-(baseFloorSize!.height / 2)) + (player.size.height)
                                   + player.size.height + 10) // set player on top of floor
         platformY = 210 //found manually setting nextPlatformY
         
         // Generate initial platforms above the base floor
-        while blocks.count < pregenerateBlocks {
-            createPlatform()
-        }
         
         getAudio()
     }
@@ -116,6 +117,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
+        for block in blocks {
+            if cam.position.y - (block.position.y - block.size.height) > (self.bounds.height / 2) + 100{
+                blocks.remove(at: blocks.firstIndex(of: block)!)
+                block.removeFromParent()
+            }
+        }
+        
+        if blocks.count < 7 {
+            createPlatform()
+        }
+        
         // this method is called before each frame is rendered
         player.move(touching: touchOffset)
         // lerp camera movement
@@ -184,12 +196,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Starting Floor Generation
-    func createBFloor(at position: CGPoint, _ size: CGSize) {
+    func createBaseFloor(at position: CGPoint, _ size: CGSize) {
         let baseFloor = Block(blockNames[0], size, position, nextAddY, &platformY)
         baseFloor.name = "floor"
         baseFloor.isBaseFloor = true // Mark it as the base floor for logic checks
         addChild(baseFloor)
-        blocks.append(baseFloor)
     }
     
     // MARK: Score Display

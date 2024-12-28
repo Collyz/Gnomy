@@ -11,7 +11,7 @@ class Block: SKSpriteNode{
     
     init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat, _ platformY: inout CGFloat)
     {
-        let texture = SKTexture(imageNamed: filename)
+        let texture = blockAtlas.textureNamed(filename)
         super.init(texture: texture, color: .clear, size: size)
         
         self.name = "platform"
