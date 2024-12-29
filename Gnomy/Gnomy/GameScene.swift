@@ -15,11 +15,11 @@ struct PhysicsCategory {
     static let player: UInt32 = 0x1 << 1
     static let platform: UInt32 = 0x1 << 2
 }
-
+// Block Atlas/
 let blockAtlas = SKTextureAtlas(named: "Blocks")
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
-    // Block Atlas
+    weak var viewController: GameViewController?
     
     // Game logic
     private var firstTap = false // first jump check
@@ -55,6 +55,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Adjust this value to view lower
     
     override func didMove(to view: SKView) {
+        self.name = "GameScene"
         // Set up the scene and player
         addChild(player)
         physicsWorld.gravity = CGVector(dx: 0, dy: -4)
@@ -75,7 +76,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         platformY = 210 //found manually setting nextPlatformY
         
         // Generate initial platforms above the base floor
-        
         getAudio()
     }
     
@@ -217,7 +217,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         pauseButton.name = "pauseButton"
         pauseButton.size = CGSize(width: 50, height: 50)
         pauseButton.position = CGPoint(x: 230, y: 0)
-        pauseButton.zPosition = 2
+        pauseButton.zPosition = 1
         addChild(pauseButton)
     }
     

@@ -9,6 +9,7 @@ import SwiftUI
 import SpriteKit
 
 struct MenuView: View {
+    var onStartTapped: () -> Void
     
     var body: some View {
         NavigationStack {
@@ -31,7 +32,9 @@ struct MenuView: View {
                     .shadow(radius: 10)
                     .padding(.bottom, 175)
                     .padding(.top, 220)
-                    
+                    .onTapGesture {
+                        onStartTapped()
+                    }
             }.background(
                 Image("background")
                     .resizable()
@@ -41,8 +44,4 @@ struct MenuView: View {
             .ignoresSafeArea()
         }
         }
-}
-
-#Preview {
-    MenuView()
 }
