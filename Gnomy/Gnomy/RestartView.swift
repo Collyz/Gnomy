@@ -17,12 +17,14 @@ struct RestartView: View {
             VStack {
                 Spacer()
                 SomeButton("Restart", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
+                    .onTapGesture {
+                        onRestart()
+                    }
                 Spacer()
             }.background(
                 Image("background")
                     .resizable()
                     .scaledToFill()
-                    .scaleEffect(1.07)
             )
             .ignoresSafeArea()
         }
@@ -30,8 +32,7 @@ struct RestartView: View {
 }
 
 #Preview {
-    
-    PauseView {
+    RestartView {
         
     }
 }

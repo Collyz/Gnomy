@@ -41,8 +41,8 @@ class GameViewController: UIViewController {
         skView = SKView(frame: view.bounds)
         skView?.presentScene(gameScene!)
         skView?.ignoresSiblingOrder = true
-        skView?.showsFPS = true
-        skView?.showsNodeCount = true
+        skView?.showsFPS = true // comment off for release
+        skView?.showsNodeCount = true // comment off for release
         
         // load the pause view
         pauseMenu = PauseView(onUnpause: {
@@ -71,7 +71,6 @@ class GameViewController: UIViewController {
     }
     
     func pauseGame() {
-        print("paused")
         if pauseMenu != nil {
             let hostingController = UIHostingController(rootView: pauseMenu)
 
@@ -83,7 +82,6 @@ class GameViewController: UIViewController {
     }
     
     func resumeGame() {
-        print("resumed")
         if skView != nil {
             DispatchQueue.main.async {
                 self.view.subviews.forEach { $0.removeFromSuperview() }

@@ -143,7 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
             // TODO: insert pause functionality and loss screen/restart
             player.removeFromParent()
-            resetGame() // TODO: remove later
+            lossGame() // TODO: remove later
         }
         
         // Update background,pausebutton, and score
@@ -243,23 +243,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func didEnd(_ contact: SKPhysicsContact) {
         
     }
-    
-    // TODO: - Proper reset: RESETS score, camera, player, regenerates platforms, [recyle pause, scorelabelnode and background?]
-    func resetGame() {
-        pauseGame()
-        scoreUpdate(false)
-        for block in blocks {
-            block.removeFromParent()
-        }
-        blocks.removeAll()
-        platformY = 210
-        pauseGame()
-        player.resignFirstResponder()
-        cam.position = CGPoint(x: 0, y: 400)
-        player.position = CGPoint(x: 0, y: 0)
-        addChild(player)
-        firstTap = false
-    }
 
     
 //    func addCameraDebugOutline() {
@@ -291,15 +274,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    // MARK: - Score update
+    func scoreUpdate(_ increment: Bool) {
+        if(increment) {
+            score+=1
+            scoreNode.text = String(score)
+        } else {
+            score = 0
+            scoreNode.text = String(score)
+        }
+    }
+    
     
     // MARK: - Audio play/pause
     func playAudio() {
         if !backgroundMusicPlayer!.isPlaying {
-            print("playing audio")
             backgroundMusicPlayer!.play()
         } else {
             backgroundMusicPlayer!.pause()
-            print("pause audio")
         }
     }
     
@@ -316,14 +308,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         playAudio()
     }
     
-    func scoreUpdate(_ increment: Bool) {
-        if(increment) {
-            score+=1
-            scoreNode.text = String(score)
-        } else {
-            score = 0
-            scoreNode.text = String(score)
+    func lossGame() {
+        isPaused = true
+        playAudio()
+        viewController?.lossGame()
+    }
+    
+    // TODO: - Proper reset: RESETS score, camera, player, regenerates platforms, [recyle pause, scorelabelnode and background?]
+    func resetGame() {
+        scoreUpdate(false)
+        for block in blocks {
+            block.removeFromParent()
         }
+        blocks.removeAll()
+        platformY = 210
+        player.resignFirstResponder()
+        cam.position = CGPoint(x: 0, y: 400)
+        player.position = CGPoint(x: 0, y: 0)
+        addChild(player)
+        firstTap = false
+        
+        resumeGame()
     }
 
 
