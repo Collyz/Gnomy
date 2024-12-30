@@ -19,7 +19,7 @@ struct PhysicsCategory {
 let blockAtlas = SKTextureAtlas(named: "Blocks")
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
-    weak var viewController: GameViewController?
+    var viewController: GameViewController?
     
     // Game logic
     private var firstTap = false // first jump check
@@ -77,6 +77,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Generate initial platforms above the base floor
         getAudio()
+        playAudio()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -89,7 +90,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Jump only on the first tap to the screen that isn't on the pause button
         if(tappedNode.name == "pauseButton") {
             pauseGame()
-            playAudio()
         } else if !firstTap{
             player.jump()
             firstTap = true
@@ -161,9 +161,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 body.collisionBitMask = PhysicsCategory.platform
             }
         }
-        
-        
-        
 
     }
 
@@ -288,7 +285,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             backgroundMusicPlayer!.numberOfLoops = -1 // infinite loop
             backgroundMusicPlayer!.prepareToPlay()
             backgroundMusicPlayer!.volume = 0.5
-            playAudio()
+//            playAudio()
         } catch {
             print("failed to initialize AVAudioPlayer: \(error.localizedDescription)")
         }
@@ -298,16 +295,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Audio play/pause
     func playAudio() {
         if !backgroundMusicPlayer!.isPlaying {
+            print("playing audio")
             backgroundMusicPlayer!.play()
         } else {
             backgroundMusicPlayer!.pause()
+            print("pause audio")
         }
     }
     
     // MARK: - Pauses the game
     func pauseGame() {
-        isPaused = !isPaused
+        isPaused = true
+        playAudio()
         // TODO: Pause menu
+        viewController?.pauseGame()
+    }
+    
+    func resumeGame() {
+        isPaused = false
+        playAudio()
     }
     
     func scoreUpdate(_ increment: Bool) {

@@ -12,9 +12,14 @@ import GameplayKit
 
 class GameViewController: UIViewController {
     var currMenu: MenuView?
+    var pauseMenu: PauseView?
+    var restartView: RestartView?
+    
     var currGKScene: GKScene?
     var gameScene: GameScene?
     var skView: SKView?
+    
+    var pauseView: PauseView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,25 +43,25 @@ class GameViewController: UIViewController {
         skView?.ignoresSiblingOrder = true
         skView?.showsFPS = true
         skView?.showsNodeCount = true
+        
+        // load the pause view
+        pauseMenu = PauseView(onUnpause: {
+            if self.gameScene != nil {
+                self.resumeGame()
+            }
+        })
+        
+        // load restart view
+        restartView = RestartView(onRestart: {
+            self.restartGame()
+        })
+        
+        // pass self reference to gameviewcontroler
+        gameScene?.viewController = self
     }
 
     func startGame() {
         // Replace the current view with the SpriteKit game scene
-//        if let scene = GKScene(fileNamed: "GameScene"),
-//           let sceneNode = scene.rootNode as? GameScene {
-//            sceneNode.scaleMode = .aspectFill
-//            let skView = SKView(frame: view.bounds)
-//            skView.presentScene(sceneNode)
-//            skView.ignoresSiblingOrder = true
-//            skView.showsFPS = true
-//            skView.showsNodeCount = true
-//
-//            // Transition to the game
-//            DispatchQueue.main.async {
-//                self.view.subviews.forEach { $0.removeFromSuperview() } // Remove existing views
-//                self.view.addSubview(skView)
-//            }
-//        }
         if skView != nil {
             DispatchQueue.main.async {
                 self.view.subviews.forEach { $0.removeFromSuperview() } 
@@ -66,7 +71,50 @@ class GameViewController: UIViewController {
     }
     
     func pauseGame() {
-        
+        print("paused")
+        if pauseMenu != nil {
+            let hostingController = UIHostingController(rootView: pauseMenu)
+
+            addChild(hostingController)
+            hostingController.view.frame = view.bounds
+            view.addSubview(hostingController.view)
+            hostingController.didMove(toParent: self)
+        }
+    }
+    
+    func resumeGame() {
+        print("resumed")
+        if skView != nil {
+            DispatchQueue.main.async {
+                self.view.subviews.forEach { $0.removeFromSuperview() }
+                self.view.addSubview(self.skView!)
+            }
+            if gameScene != nil {
+                gameScene?.resumeGame()
+            }
+        }
+    }
+    
+    func lossGame() {
+        if restartView != nil {
+            let hostingController = UIHostingController(rootView: restartView)
+            addChild(hostingController)
+            hostingController.view.frame = view.bounds
+            view.addSubview(hostingController.view)
+            hostingController.didMove(toParent: self)
+        }
+    }
+    
+    func restartGame() {
+        if skView != nil {
+            DispatchQueue.main.async {
+                self.view.subviews.forEach { $0.removeFromSuperview() }
+                self.view.addSubview(self.skView!)
+            }
+            if gameScene != nil {
+                gameScene?.resetGame()
+            }
+        }
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {

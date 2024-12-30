@@ -15,23 +15,11 @@ struct MenuView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                Text("Help him home!")
+                Text("Help him climb!")
                     .font(.title3)
                     .bold()
                     .foregroundStyle(Color.black)
-                Text("Start!")
-                    .foregroundStyle(Color.black)
-                    .bold()
-                    .font(.largeTitle)
-                    .padding(.horizontal, 25)
-                    .padding(.vertical, 0)
-                    .background(Color.yellow)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white, lineWidth: 3))
-                    .shadow(radius: 10)
-                    .padding(.bottom, 175)
-                    .padding(.top, 220)
+                SomeButton("Start!", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onStartTapped()
                     }
@@ -43,5 +31,9 @@ struct MenuView: View {
             )
             .ignoresSafeArea()
         }
-        }
+    }
+}
+
+#Preview {
+    MenuView { }
 }
