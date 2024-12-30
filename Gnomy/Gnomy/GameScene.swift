@@ -88,9 +88,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let loc = touch.location(in: self)
         let tappedNode = atPoint(loc)
         // Jump only on the first tap to the screen that isn't on the pause button
-        if(tappedNode.name == "pauseButton") {
+        if(tappedNode.name == "pauseButton" || tappedNode.name == "pauseButtonTapArea") {
+            print(tappedNode.name)
             pauseGame()
         } else if !firstTap{
+            print(tappedNode.name)
             player.jump()
             firstTap = true
         }
@@ -148,8 +150,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Update background,pausebutton, and score
         background!.position.y = cam.position.y
-        scoreNode.position.y = cam.position.y + 500
-        pauseButton.position.y = cam.position.y + 600
+        scoreNode.position.y = cam.position.y + (frame.height/2) - 200
+        pauseButton.position.y = cam.position.y + (frame.height/2) - 100
+        
         
 //        debugOutline.position.y = cam.position.y
         
@@ -215,6 +218,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         pauseButton.size = CGSize(width: 50, height: 50)
         pauseButton.position = CGPoint(x: 230, y: 0)
         pauseButton.zPosition = 1
+        
+        // make pause easier to tap on by adding an invisible node behind it
+        let invisibleNode = SKSpriteNode(color: .clear, size: CGSize(width: 100, height: 100))
+        invisibleNode.name = "pauseButtonTapArea"
+        invisibleNode.position  = CGPoint(x: 0, y: 0)
+        print(pauseButton.position.x/5)
+        invisibleNode.zPosition = pauseButton.zPosition - 1
+        pauseButton.addChild(invisibleNode)
         addChild(pauseButton)
     }
     
