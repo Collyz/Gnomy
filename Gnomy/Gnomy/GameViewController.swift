@@ -19,7 +19,8 @@ class GameViewController: UIViewController {
     var gameScene: GameScene?
     var skView: SKView?
     
-    var pauseView: PauseView?
+    var musicPlayer: Gnomy.MusicPlayer?
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,6 +59,9 @@ class GameViewController: UIViewController {
         
         // pass self reference to gameviewcontroler
         gameScene?.viewController = self
+        
+        // Music Player
+        musicPlayer = Gnomy.MusicPlayer()
     }
 
     func startGame() {
@@ -68,6 +72,7 @@ class GameViewController: UIViewController {
                 self.view.addSubview(self.skView!)
             }
         }
+        musicPlayer?.playBgMusic()
     }
     
     func pauseGame() {
@@ -79,6 +84,7 @@ class GameViewController: UIViewController {
             view.addSubview(hostingController.view)
             hostingController.didMove(toParent: self)
         }
+        musicPlayer?.pauseBgMusic()
     }
     
     func resumeGame() {
@@ -91,6 +97,7 @@ class GameViewController: UIViewController {
                 gameScene?.resumeGame()
             }
         }
+        musicPlayer?.playBgMusic()
     }
     
     func lossGame() {
@@ -101,6 +108,7 @@ class GameViewController: UIViewController {
             view.addSubview(hostingController.view)
             hostingController.didMove(toParent: self)
         }
+        musicPlayer?.pauseBgMusic()
     }
     
     func restartGame() {
@@ -113,6 +121,8 @@ class GameViewController: UIViewController {
                 gameScene?.resetGame()
             }
         }
+        
+        musicPlayer?.playBgMusic()
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {

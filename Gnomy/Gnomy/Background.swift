@@ -25,14 +25,14 @@ class Background: SKSpriteNode{
         self.size = size
         self.position = position
         self.zPosition = 0
-        self.anchorPoint = CGPoint(x: 0.5, y: 0.5) // Default anchor point
+        
         
         // Create hitboxes for the left and right sides
         let hitboxWidth: CGFloat = 1 // Thin hitboxes
         setHitbox(&rightHitBox, CGSize(width: hitboxWidth, height: size.height),
-                  CGPoint(x: size.width / 2 - hitboxWidth / 2, y: 0), "rightHitbox")
+                  CGPoint(x: size.width / 2 - hitboxWidth / 2 + 40, y: 0), "rightHitbox")
         setHitbox(&leftHitBox, CGSize(width: hitboxWidth, height: size.height),
-                  CGPoint(x: -size.width / 2 + hitboxWidth / 2, y: 0), "leftHitbox")
+                  CGPoint(x: -size.width / 2 + hitboxWidth / 2 - 40, y: 0), "leftHitbox")
         
         self.texture!.filteringMode = .nearest
     }
@@ -45,7 +45,7 @@ class Background: SKSpriteNode{
         node = SKSpriteNode(color: .clear, size: size)
         node.name = name
         node.position = position
-        node.zPosition = -1
+        node.zPosition = 1
         
         node.physicsBody = SKPhysicsBody(rectangleOf: size)
         node.physicsBody?.isDynamic = false

@@ -32,11 +32,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var platformSize: CGSize?
     private var baseFloorSize: CGSize?
     
-    // Game Audio
-    private var backgroundMusicPlayer: AVAudioPlayer? = nil
-    
     // Player
-    private let player = Player(fileName: "player", size: CGSize(width: 64, height: 64), position: CGPoint(x: 0, y: 0))
+    private let player = Player(fileName: "player", position: CGPoint(x: 0, y: 0))
     
     // Nonplayer nodes
     private let cam = SKCameraNode()
@@ -60,8 +57,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(player)
         physicsWorld.gravity = CGVector(dx: 0, dy: -4)
         physicsWorld.contactDelegate = self
+        
         camera = cam
         cam.position = CGPoint(x: 0, y: 400)
+        
         createBg()
         createScoreLabel(at: CGPoint(x: frame.midX, y: frame.midY))
         createPauseButton()
@@ -76,8 +75,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         platformY = 210 //found manually setting nextPlatformY
         
         // Generate initial platforms above the base floor
-        getAudio()
-        playAudio()
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -89,15 +86,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let tappedNode = atPoint(loc)
         // Jump only on the first tap to the screen that isn't on the pause button
         if(tappedNode.name == "pauseButton" || tappedNode.name == "pauseButtonTapArea") {
-            print(tappedNode.name)
             pauseGame()
         } else if !firstTap{
-            print(tappedNode.name)
+            player.removeAllChildren()
             player.jump()
             firstTap = true
         }
         
-        touchOffset = touches.first!.location(in: self)
+        touchOffset = nil
         
     }
     
@@ -141,11 +137,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let cameraMoveSpeed: CGFloat = 0.05
         let newY = cam.position.y + (targetY - cam.position.y) * cameraMoveSpeed
         cam.position.y = newY
-        // lose if fall below cam
+        // the user loses if you fall below the cameras view
         if cam.position.y - (player.position.y - player.size.height) > (self.bounds.height / 2) + 100 {
             // TODO: insert pause functionality and loss screen/restart
             player.removeFromParent()
-            lossGame() // TODO: remove later
+            lossGame()
         }
         
         // Update background,pausebutton, and score
@@ -165,6 +161,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
 
+    }
+    
+    // MARK: - Handles collission
+    func didBegin(_ contact: SKPhysicsContact) {
+        
+        let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
+        let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
+        
+        guard let platformNode = platformBody.node as? Block else { return }
+        // Ensure the player is landing on the top of the platform
+        if contact.contactNormal.dy > 0 {
+            // Player is falling onto the platform
+            player.jump()
+            // scoring
+            // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
+
+            if platformNode.scored == false && !platformNode.isBaseFloor {
+                platformNode.scored = true
+                scoreUpdate(true)
+            }
+        }
+    }
+    
+    // After collision end
+    func didEnd(_ contact: SKPhysicsContact) {
+        
     }
 
     func lerp(start: CGFloat, end: CGFloat, t: CGFloat) -> CGFloat {
@@ -223,39 +245,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let invisibleNode = SKSpriteNode(color: .clear, size: CGSize(width: 100, height: 100))
         invisibleNode.name = "pauseButtonTapArea"
         invisibleNode.position  = CGPoint(x: 0, y: 0)
-        print(pauseButton.position.x/5)
         invisibleNode.zPosition = pauseButton.zPosition - 1
         pauseButton.addChild(invisibleNode)
         addChild(pauseButton)
     }
-    
-    // MARK: - Handles collission
-    func didBegin(_ contact: SKPhysicsContact) {
-        
-        let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
-        let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
-        
-        guard let platformNode = platformBody.node as? Block else { return }
-        // Ensure the player is landing on the top of the platform
-        if contact.contactNormal.dy > 0 {
-            // Player is falling onto the platform
-            player.jump()
-            // scoring
-            // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
 
-            if platformNode.scored == false && !platformNode.isBaseFloor {
-                platformNode.scored = true
-                scoreUpdate(true)
-            }
-        }
-    }
-    
-    // After collision end
-    func didEnd(_ contact: SKPhysicsContact) {
-        
-    }
-
-    
 //    func addCameraDebugOutline() {
 //        debugOutline.strokeColor = .red // Visible color
 //        debugOutline.lineWidth = 2 // Thickness of the outline
@@ -265,25 +259,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 ////        cam.addChild(debugOutline)
 //        addChild(debugOutline)
 //    }
-    
-    
-    // MARK: Gets the audio file and makes sure the audio isn't nil
-    func getAudio() {
-        guard let musicURL = Bundle.main.url(forResource: "bg_sound_1", withExtension: "wav") else {
-            print("music file not found")
-            return
-        }
-        
-        do {
-            backgroundMusicPlayer = try AVAudioPlayer(contentsOf: musicURL)
-            backgroundMusicPlayer!.numberOfLoops = -1 // infinite loop
-            backgroundMusicPlayer!.prepareToPlay()
-            backgroundMusicPlayer!.volume = 0.5
-//            playAudio()
-        } catch {
-            print("failed to initialize AVAudioPlayer: \(error.localizedDescription)")
-        }
-    }
     
     // MARK: - Score update
     func scoreUpdate(_ increment: Bool) {
@@ -297,31 +272,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     
-    // MARK: - Audio play/pause
-    func playAudio() {
-        if !backgroundMusicPlayer!.isPlaying {
-            backgroundMusicPlayer!.play()
-        } else {
-            backgroundMusicPlayer!.pause()
-        }
+    // MARK: - Starts the game
+    func startGame() {
+        isPaused = false
     }
     
     // MARK: - Pauses the game
     func pauseGame() {
-        isPaused = true
-        playAudio()
-        // TODO: Pause menu
+        isPaused = !isPaused
         viewController?.pauseGame()
     }
     
     func resumeGame() {
         isPaused = false
-        playAudio()
     }
     
     func lossGame() {
         isPaused = true
-        playAudio()
         viewController?.lossGame()
     }
     
@@ -334,8 +301,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blocks.removeAll()
         platformY = 210
         player.resignFirstResponder()
+        player.addStartPlatform(size: player.size)
         cam.position = CGPoint(x: 0, y: 400)
-        player.position = CGPoint(x: 0, y: 0)
+        player.position = CGPoint(x: 0,
+                                  y: (-(baseFloorSize!.height / 2)) + (player.size.height)
+                                  + player.size.height + 10)
         addChild(player)
         firstTap = false
         
