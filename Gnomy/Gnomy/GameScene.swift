@@ -217,7 +217,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Starting Floor Generation
     func createBaseFloor(at position: CGPoint, _ size: CGSize) {
-        let baseFloor = Block(blockNames[0], size, position, nextAddY, &platformY)
+        let baseFloor = Block("base_floor", size, position, nextAddY, &platformY)
         baseFloor.name = "floor"
         baseFloor.isBaseFloor = true // Mark it as the base floor for logic checks
         addChild(baseFloor)
