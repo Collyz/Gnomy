@@ -32,6 +32,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //    private let pregenerateBlocks: Int = 1
     private var platformSize: CGSize?
     private var baseFloorSize: CGSize?
+    private var spawnMoveBlock: Bool = false
+    private var totalBlocks: Int = 0
     
     // Player
     private let player = Player(fileName: "player", position: CGPoint(x: 0, y: 0))
@@ -127,7 +129,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
                 blocks.remove(at: blocks.firstIndex(of: block)!)
                 block.removeFromParent()
-            } 
+            }
         }
         if blocks.count < 7 {
             createPlatform()
@@ -170,11 +172,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
         let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
-        if platformBody.node?.name == nil {
-            return
-        } else {
-            print(platformBody.node?.name)
-        }
+        
         guard let platformNode = platformBody.node as? Block else { return }
         // Ensure the player is landing on the top of the platform
         if contact.contactNormal.dy > 0 {
@@ -207,17 +205,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Platform Generation
     func createPlatform() {
-        let blockPos = CGPoint(
-            x: CGFloat.random(in: frame.minX + platformSize!.width...frame.maxX - platformSize!.width),
-            y: platformY
-        )
+        totalBlocks += 1
+        var blockPos = CGPoint()
+        var moveBlock = false;
         
-        let block = Block(blockNames[(score / 100) % blockNames.count], platformSize!, blockPos,
-            nextAddY,
-            &platformY
-        )
+        if totalBlocks % 7 == 0 || totalBlocks % 15 == 0{
+            blockPos = CGPoint(
+                x: 0,
+                y: platformY
+            )
+            moveBlock = true
+        } else {
+            blockPos = CGPoint(
+                x: CGFloat.random(in: frame.minX + platformSize!.width...frame.maxX - platformSize!.width),
+                y: platformY
+            )
+        }
+        
+        let block = Block(blockNames[(score / 100) % blockNames.count], platformSize!, blockPos, nextAddY, &platformY)
+        
+        block.moving = moveBlock
+        
         addChild(block)
         blocks.append(block)
+
+        block.moveSideToSide(frame.width)
+        
     }
     
     // MARK: - Starting Floor Generation

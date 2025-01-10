@@ -8,13 +8,14 @@ import SpriteKit
 class Block: SKSpriteNode{
     public var scored: Bool = false;
     public var isBaseFloor: Bool = false;
-    public var sideToSide: Bool = false;
+    public var moving: Bool = false;
     
     init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat, _ platformY: inout CGFloat)
     {
         let texture = blockAtlas.textureNamed(filename)
-        super.init(texture: texture, color: .clear, size: size)
+        texture.filteringMode = .nearest
         
+        super.init(texture: texture, color: .clear, size: size)
         self.name = "platform"
         self.scale(to: size)
         self.position = position
@@ -36,15 +37,22 @@ class Block: SKSpriteNode{
         self.texture!.filteringMode = .nearest
         self.zPosition = 1
         
+        
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func moveSideToSide() {
-        let moveAction = SKAction.move(by: CGVector(dx: 10, dy: 0), duration: 1)
-        self.run(moveAction)
+    func moveSideToSide(_ frameWidth: CGFloat) {
+        if(moving) {
+            let moveRight = SKAction.moveBy(x: frameWidth/2, y: 0, duration: 1)
+            let moveLeft = SKAction.moveBy(x: -frameWidth/2, y: 0, duration: 1)
+            let sequence = SKAction.sequence([moveRight, moveLeft, moveLeft, moveRight])
+            self.run(SKAction.repeatForever(sequence))
+            self.xScale = -self.xScale
+        }
+
     }
     
 }

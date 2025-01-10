@@ -27,7 +27,6 @@ class Player: SKSpriteNode {
         self.physicsBody?.allowsRotation = false
         self.physicsBody?.restitution = 0
         self.physicsBody?.linearDamping = 1
-        self.physicsBody?.usesPreciseCollisionDetection = true
         
         // Physics categories
         self.physicsBody?.categoryBitMask = PhysicsCategory.player
