@@ -25,16 +25,15 @@ class Background: SKSpriteNode{
         self.size = size
         self.position = position
         self.zPosition = 0
-        
+        self.texture!.filteringMode = .nearest
         
         // Create hitboxes for the left and right sides
         let hitboxWidth: CGFloat = 1 // Thin hitboxes
+        let widthOffset: CGFloat = 30
         setHitbox(&rightHitBox, CGSize(width: hitboxWidth, height: size.height),
-                  CGPoint(x: size.width / 2 - hitboxWidth / 2 + 40, y: 0), "rightHitbox")
+                  CGPoint(x: size.width / 2 - hitboxWidth / 2 + widthOffset, y: 0), "rightHitbox")
         setHitbox(&leftHitBox, CGSize(width: hitboxWidth, height: size.height),
-                  CGPoint(x: -size.width / 2 + hitboxWidth / 2 - 40, y: 0), "leftHitbox")
-        
-        self.texture!.filteringMode = .nearest
+                  CGPoint(x: -size.width / 2 + hitboxWidth / 2 - widthOffset, y: 0), "leftHitbox")
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -42,18 +41,17 @@ class Background: SKSpriteNode{
     }
     
     private func setHitbox(_ node: inout SKSpriteNode,_ size: CGSize, _ position: CGPoint, _ name: String) {
-        node = SKSpriteNode(color: .clear, size: size)
+        node = SKSpriteNode(color: .red, size: size)
         node.name = name
         node.position = position
-        node.zPosition = 1
+        node.zPosition = 0
         
         node.physicsBody = SKPhysicsBody(rectangleOf: size)
         node.physicsBody?.isDynamic = false
         node.physicsBody?.restitution = 0
-        node.physicsBody?.linearDamping = 0
         node.physicsBody?.friction = 0
         
-        node.physicsBody?.categoryBitMask = PhysicsCategory.none
+        node.physicsBody?.categoryBitMask = PhysicsCategory.border
         node.physicsBody?.contactTestBitMask = PhysicsCategory.player
         node.physicsBody?.collisionBitMask = PhysicsCategory.player
         self.addChild(node)

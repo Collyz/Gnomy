@@ -8,6 +8,7 @@ import SpriteKit
 class Block: SKSpriteNode{
     public var scored: Bool = false;
     public var isBaseFloor: Bool = false;
+    public var sideToSide: Bool = false;
     
     init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat, _ platformY: inout CGFloat)
     {
@@ -24,8 +25,8 @@ class Block: SKSpriteNode{
         let topLeftPoint = CGPoint(x: -size.width / 2, y: size.height / 2) // Top-left relative to the platform
         let topRightPoint = CGPoint(x: size.width / 2, y: size.height / 2) // Top-right relative to the platform
         self.physicsBody = SKPhysicsBody(edgeFrom: topLeftPoint, to: topRightPoint)
-        self.physicsBody?.isDynamic = false // Static platform
-        self.physicsBody?.restitution = 0 // No bounce
+        self.physicsBody?.isDynamic = false
+        self.physicsBody?.restitution = 0
         
         // Set physics category
         self.physicsBody?.categoryBitMask = PhysicsCategory.platform
@@ -40,4 +41,10 @@ class Block: SKSpriteNode{
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+    func moveSideToSide() {
+        let moveAction = SKAction.move(by: CGVector(dx: 10, dy: 0), duration: 1)
+        self.run(moveAction)
+    }
+    
 }

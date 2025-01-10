@@ -8,7 +8,7 @@
 import SpriteKit
 
 class Player: SKSpriteNode {
-    private let moveSpeed: CGFloat = 2;
+    private let moveSpeed: CGFloat = 4;
     private var feetHitBox: SKSpriteNode!
     
     init(fileName: String, position: CGPoint = CGPoint.zero) {
@@ -27,19 +27,17 @@ class Player: SKSpriteNode {
         self.physicsBody?.allowsRotation = false
         self.physicsBody?.restitution = 0
         self.physicsBody?.linearDamping = 1
+        self.physicsBody?.usesPreciseCollisionDetection = true
         
         // Physics categories
         self.physicsBody?.categoryBitMask = PhysicsCategory.player
-        self.physicsBody?.contactTestBitMask = PhysicsCategory.none // Detect contact with platforms
-        self.physicsBody?.collisionBitMask = PhysicsCategory.none // Allow physical collision with platforms
+        self.physicsBody?.contactTestBitMask = PhysicsCategory.border // Detect contact with platforms
+        self.physicsBody?.collisionBitMask = PhysicsCategory.border // Allow physical collision with platforms
         
         // Add a thin hitbox for the player's feet
         addStartPlatform(size: size)
 //        print(self.children)
     }
-    
-    
-    
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -48,7 +46,7 @@ class Player: SKSpriteNode {
     func addStartPlatform(size: CGSize) {
         let hitboxHeight: CGFloat = 2 // Thin hitbox height
         let hitboxSize = CGSize(width: size.width * 0.8, height: hitboxHeight) // Slightly smaller than the player's width
-        feetHitBox = SKSpriteNode(color: .clear, size: hitboxSize) // Invisible hitbox
+        feetHitBox = SKSpriteNode(color: .red, size: hitboxSize) // Invisible hitbox
         feetHitBox.name = "hitbox"
         feetHitBox.position = CGPoint(x: 0, y: -size.height / 2 - 4) // Just below the player's main body
         feetHitBox.zPosition = self.zPosition + 1

@@ -14,6 +14,7 @@ struct PhysicsCategory {
     static let none: UInt32 = 0x1 << 0
     static let player: UInt32 = 0x1 << 1
     static let platform: UInt32 = 0x1 << 2
+    static let border: UInt32 = 0x1 << 3
 }
 // Block Atlas/
 let blockAtlas = SKTextureAtlas(named: "Blocks")
@@ -38,7 +39,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Nonplayer nodes
     private let cam = SKCameraNode()
     private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
-    private var background: SKSpriteNode?
+    private var background = SKSpriteNode(imageNamed: "background")
     private let pauseButton = SKSpriteNode(imageNamed: "pause")
     
     // Blocks
@@ -52,6 +53,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Adjust this value to view lower
     
     override func didMove(to view: SKView) {
+        self.view?.showsPhysics = true
         self.name = "GameScene"
         // Set up the scene and player
         addChild(player)
@@ -125,7 +127,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
                 blocks.remove(at: blocks.firstIndex(of: block)!)
                 block.removeFromParent()
-            }
+            } 
         }
         if blocks.count < 7 {
             createPlatform()
@@ -145,7 +147,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         // Update background,pausebutton, and score
-        background!.position.y = cam.position.y
+        background.position.y = cam.position.y
         scoreNode.position.y = cam.position.y + (frame.height/2) - 200
         pauseButton.position.y = cam.position.y + (frame.height/2) - 100
         
@@ -168,7 +170,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
         let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
-        
+        if platformBody.node?.name == nil {
+            return
+        } else {
+            print(platformBody.node?.name)
+        }
         guard let platformNode = platformBody.node as? Block else { return }
         // Ensure the player is landing on the top of the platform
         if contact.contactNormal.dy > 0 {
@@ -195,9 +201,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Background assignments
     func createBg() {
-        // Background
         background = Background("background", CGSize(width: 620, height: 1400))
-        addChild(background!)
+        addChild(background)
     }
     
     // MARK: - Platform Generation
