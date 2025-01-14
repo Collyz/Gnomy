@@ -10,7 +10,16 @@ import SwiftUI
 import SpriteKit
 import GameplayKit
 
+enum GameViewState {
+    case menu
+    case game
+    case pause
+    case restart
+}
+
+
 class GameViewController: UIViewController {
+    @Published var currentState: GameViewState = .menu
     var currMenu: MenuView?
     var pauseMenu: PauseView?
     var restartView: RestartView?
@@ -19,7 +28,7 @@ class GameViewController: UIViewController {
     var gameScene: GameScene?
     var skView: SKView?
     
-    var musicPlayer: Gnomy.MusicPlayer?
+    var musicPlayer: MusicPlayer?
     
     
     override func viewDidLoad() {
@@ -73,17 +82,18 @@ class GameViewController: UIViewController {
                     self.resumeGame()
                 }
             })
+            
         }
         
         if pauseMenu != nil {
+            print("Switched to pause view")
+            pauseMenu?.volumeValue = self.getVolume()
             let hostingController = UIHostingController(rootView: pauseMenu)
-
             addChild(hostingController)
             hostingController.view.frame = view.bounds
             view.addSubview(hostingController.view)
             hostingController.didMove(toParent: self)
         }
-        musicPlayer?.pauseBgMusic()
     }
     
     func resumeGame() {
@@ -130,6 +140,14 @@ class GameViewController: UIViewController {
         }
         
         musicPlayer?.playBgMusic()
+    }
+    
+    func setVolume(_ volume: Float) {
+        musicPlayer?.setVolume(volume)
+    }
+    
+    func getVolume() -> Float {
+        return musicPlayer?.getVolume() ?? 0
     }
     
     func currScore() -> Int {

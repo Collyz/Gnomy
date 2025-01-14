@@ -10,18 +10,41 @@ import SpriteKit
 
 struct PauseView: View {
     @State var controller: GameViewController
+    @State var volumeValue: Float  = 0.5
     var onUnpause: () -> Void
+
     
     var body: some View {
         NavigationStack {
             VStack {
+                Spacer()
+                Text("Master Volume")
+                    .font(.custom("ChalkDuster", size: 24))
+                    .font(.title)
+                    .foregroundColor(Color.white)
+                Slider(
+                    value: $volumeValue,
+                    in: 0...1,
+                    step: 0.1
+                ) {
+                    Text("Volume")
+                } minimumValueLabel: {
+                    Text("0")
+                } maximumValueLabel: {
+                    Text("1")
+                }
+                    .padding()
+                    .onChange(of: volumeValue) { oldVal, newVal in
+                        controller.setVolume(newVal)
+                        volumeValue = newVal
+                    }
                 
                 Spacer()
                 SomeButton("Resume", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onUnpause()
                     }
-                Spacer()
+
             }.background(
                 Image("background")
                     .resizable()
@@ -58,7 +81,8 @@ struct SomeButton: View {
                 .stroke(borderColor, lineWidth: 3))
             .shadow(radius: 10)
             .padding(.bottom, 175)
-            .padding(.top, 220)
+            
+            
     }
 }
 

@@ -16,9 +16,11 @@ struct MenuView: View {
             VStack {
                 Spacer()
                 Text("Help him climb!")
+                    .font(.custom("Chalkduster", size: 40))
                     .font(.title3)
                     .bold()
-                    .foregroundStyle(Color.black)
+                    .foregroundStyle(Color.white)
+                Spacer()
                 SomeButton("Start!", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onStartTapped()

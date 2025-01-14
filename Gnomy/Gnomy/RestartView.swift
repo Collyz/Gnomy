@@ -21,6 +21,7 @@ struct RestartView: View {
                     .font(.custom("Chalkduster", size: 50))
                     .font(.largeTitle)
                     .foregroundStyle(Color.white)
+                Spacer()
                 SomeButton("Restart", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onRestart()

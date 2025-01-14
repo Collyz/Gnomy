@@ -44,4 +44,16 @@ class MusicPlayer {
             }
         }
     }
+    
+    func setVolume(_ value: Float) {
+        if backgroundMusicPlayer != nil {
+            if backgroundMusicPlayer!.isPlaying {
+                backgroundMusicPlayer!.volume = value
+            }
+        }
+    }
+    
+    func getVolume() -> Float {
+        return backgroundMusicPlayer!.volume
+    }
 }
