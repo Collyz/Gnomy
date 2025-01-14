@@ -9,11 +9,13 @@ import SwiftUI
 import SpriteKit
 
 struct PauseView: View {
+    @State var controller: GameViewController
     var onUnpause: () -> Void
     
     var body: some View {
         NavigationStack {
             VStack {
+                
                 Spacer()
                 SomeButton("Resume", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
@@ -45,6 +47,7 @@ struct SomeButton: View {
     
     var body: some View {
         Text(buttonLabel)
+            .font(.custom("Chalkduster", size: 35))
             .font(.largeTitle)
             .padding(.horizontal, 25)
             .padding(.vertical, 0)
@@ -61,7 +64,7 @@ struct SomeButton: View {
 
 #Preview {
     
-    PauseView {
+    PauseView(controller: GameViewController()) {
         
     }
 }

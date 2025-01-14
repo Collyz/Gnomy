@@ -55,8 +55,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Adjust this value to view lower
     
     override func didMove(to view: SKView) {
-        self.view?.showsPhysics = true
         self.name = "GameScene"
+        self.isPaused = true
         // Set up the scene and player
         addChild(player)
         physicsWorld.gravity = CGVector(dx: 0, dy: -4)
@@ -98,12 +98,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         touchOffset = nil
+        player.stopMovement()
+//        touchOffset = touches.first?.location(in: self)
+//        player.stopMovement()
         
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         // this method is called when the user stops touching the screen
         touchOffset = nil
+        player.stopMovement()
     }
     
     
@@ -115,6 +119,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         // called when *move touch* ends
         touchOffset = nil
+        player.stopMovement()
     }
     
     // MARK: - called before each frame is rendered
@@ -217,7 +222,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             moveBlock = true
         } else {
             blockPos = CGPoint(
-                x: CGFloat.random(in: frame.minX + platformSize!.width...frame.maxX - platformSize!.width),
+                x: CGFloat.random(in: frame.minX + platformSize!.width + 40...frame.maxX - platformSize!.width - 40),
                 y: platformY
             )
         }
@@ -287,6 +292,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             score = 0
             scoreNode.text = String(score)
         }
+    }
+    
+    func getScore() -> Int {
+        return score
     }
     
     

@@ -6,9 +6,9 @@
 //
 import SpriteKit
 class Block: SKSpriteNode{
-    public var scored: Bool = false;
-    public var isBaseFloor: Bool = false;
-    public var moving: Bool = false;
+    public var scored: Bool = false
+    public var isBaseFloor: Bool = false
+    public var moving: Bool = false
     
     init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat, _ platformY: inout CGFloat)
     {
@@ -36,8 +36,6 @@ class Block: SKSpriteNode{
         
         self.texture!.filteringMode = .nearest
         self.zPosition = 1
-        
-        
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -46,8 +44,9 @@ class Block: SKSpriteNode{
 
     func moveSideToSide(_ frameWidth: CGFloat) {
         if(moving) {
-            let moveRight = SKAction.moveBy(x: frameWidth/2, y: 0, duration: 1)
-            let moveLeft = SKAction.moveBy(x: -frameWidth/2, y: 0, duration: 1)
+            let moveTime = Double.random(in: 0.7...2)
+            let moveRight = SKAction.moveBy(x: frameWidth/2 - self.size.width, y: 0, duration: moveTime)
+            let moveLeft = SKAction.moveBy(x: -frameWidth/2 + self.size.width, y: 0, duration: moveTime)
             let sequence = SKAction.sequence([moveRight, moveLeft, moveLeft, moveRight])
             self.run(SKAction.repeatForever(sequence))
             self.xScale = -self.xScale

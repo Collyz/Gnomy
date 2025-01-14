@@ -8,8 +8,9 @@
 import SpriteKit
 
 class Player: SKSpriteNode {
-    private let moveSpeed: CGFloat = 4;
+    private let moveSpeed: CGFloat = 3;
     private var feetHitBox: SKSpriteNode!
+    
     
     init(fileName: String, position: CGPoint = CGPoint.zero) {
         let size = CGSize(width: 64, height: 64)
@@ -36,6 +37,7 @@ class Player: SKSpriteNode {
         // Add a thin hitbox for the player's feet
         addStartPlatform(size: size)
 //        print(self.children)
+        
     }
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -45,7 +47,7 @@ class Player: SKSpriteNode {
     func addStartPlatform(size: CGSize) {
         let hitboxHeight: CGFloat = 2 // Thin hitbox height
         let hitboxSize = CGSize(width: size.width * 0.8, height: hitboxHeight) // Slightly smaller than the player's width
-        feetHitBox = SKSpriteNode(color: .red, size: hitboxSize) // Invisible hitbox
+        feetHitBox = SKSpriteNode(color: .clear, size: hitboxSize) // Invisible hitbox
         feetHitBox.name = "hitbox"
         feetHitBox.position = CGPoint(x: 0, y: -size.height / 2 - 4) // Just below the player's main body
         feetHitBox.zPosition = self.zPosition + 1
@@ -62,8 +64,18 @@ class Player: SKSpriteNode {
     // MARK: - Based on the distance from the player and the touch, move the player
     func move(touching touch: CGPoint?) {
         guard let touch = touch else { return }
-        let dist = touch.x - position.x
+        let dist = touch.x - self.position.x
+        
+//        let action = SKAction.moveTo(x: touch.x, duration: 0.3)
+//        self.run(action)
+        
         self.physicsBody?.velocity = CGVector(dx: dist * moveSpeed, dy: physicsBody?.velocity.dy ?? 0)
+
+//        if dist >= 0 {
+//            self.position.x += 5
+//        } else {
+//            self.position.x -= 5
+//        }
         
     }
     
@@ -74,6 +86,11 @@ class Player: SKSpriteNode {
             self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 0) // Reset vertical velocity
             self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 800) // Reset vertical velocity
         }
+    }
+    
+    func stopMovement() {
+////        self.physicsBody?.velocity = CGVector(dx: 0, dy: (self.physicsBody?.velocity.dy)!)
+//        self.removeAllActions()
     }
 
 }

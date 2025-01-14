@@ -44,19 +44,7 @@ class GameViewController: UIViewController {
         skView?.ignoresSiblingOrder = true
         skView?.showsFPS = true // comment off for release
         skView?.showsNodeCount = true // comment off for release
-        
-        // load the pause view
-        pauseMenu = PauseView(onUnpause: {
-            if self.gameScene != nil {
-                self.resumeGame()
-            }
-        })
-        
-        // load restart view
-        restartView = RestartView(onRestart: {
-            self.restartGame()
-        })
-        
+
         // pass self reference to gameviewcontroler
         gameScene?.viewController = self
         
@@ -71,11 +59,22 @@ class GameViewController: UIViewController {
                 self.view.subviews.forEach { $0.removeFromSuperview() } 
                 self.view.addSubview(self.skView!)
             }
+            
+            gameScene?.startGame()
         }
         musicPlayer?.playBgMusic()
     }
     
     func pauseGame() {
+        if pauseMenu == nil {
+            // load the pause view
+            pauseMenu = PauseView(controller: self, onUnpause: {
+                if self.gameScene != nil {
+                    self.resumeGame()
+                }
+            })
+        }
+        
         if pauseMenu != nil {
             let hostingController = UIHostingController(rootView: pauseMenu)
 
@@ -101,6 +100,12 @@ class GameViewController: UIViewController {
     }
     
     func lossGame() {
+        if restartView == nil {
+            // load restart view
+            restartView = RestartView(controller: self, onRestart: {
+                self.restartGame()
+            })
+        }
         if restartView != nil {
             let hostingController = UIHostingController(rootView: restartView)
             addChild(hostingController)
@@ -112,6 +117,8 @@ class GameViewController: UIViewController {
     }
     
     func restartGame() {
+        
+        
         if skView != nil {
             DispatchQueue.main.async {
                 self.view.subviews.forEach { $0.removeFromSuperview() }
@@ -123,6 +130,10 @@ class GameViewController: UIViewController {
         }
         
         musicPlayer?.playBgMusic()
+    }
+    
+    func currScore() -> Int {
+        return gameScene?.getScore() ?? 0
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
