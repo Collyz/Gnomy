@@ -161,13 +161,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
 //        debugOutline.position.y = cam.position.y
         
-        if let body = player.childNode(withName: "hitbox")?.physicsBody {
-            let dy = body.velocity.dy
-            if dy >= 0 {
-                body.collisionBitMask = 0
-            } else {
-                body.collisionBitMask = PhysicsCategory.platform
-            }
+        guard let velocity = player.physicsBody?.velocity else { return }
+        if velocity.dy > 0 {
+            jumpingGravity()
+        } else {
+            fallingGravity()
         }
 
     }
@@ -282,6 +280,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 ////        cam.addChild(debugOutline)
 //        addChild(debugOutline)
 //    }
+    
+    
+    // MARK: - Update gravity (for fast falling)
+    func fallingGravity() {
+        if physicsWorld.gravity.dy == -4 {
+            physicsWorld.gravity = CGVector(dx: 0, dy: -10)
+        }
+    }
+    
+    // MARK: - Update gravity (for jumping)
+    func jumpingGravity() {
+        if physicsWorld.gravity.dy == -10 {
+            physicsWorld.gravity = CGVector(dx: 0, dy: -4)
+        }
+    }
+    
     
     // MARK: - Score update
     func scoreUpdate(_ increment: Bool) {
