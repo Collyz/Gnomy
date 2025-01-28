@@ -10,10 +10,9 @@ import SpriteKit
 
 struct PauseView: View {
     @State var controller: GameViewController
-    @State var volumeValue: Float  = 0.5
+    @Binding var volumeValue: Float
     var onUnpause: () -> Void
 
-    
     var body: some View {
         NavigationStack {
             VStack {
@@ -21,7 +20,7 @@ struct PauseView: View {
                 Text("Master Volume")
                     .font(.custom("ChalkDuster", size: 24))
                     .font(.title)
-                    .foregroundColor(Color.white)
+                    .foregroundColor(.white)
                 Slider(
                     value: $volumeValue,
                     in: 0...1,
@@ -31,21 +30,20 @@ struct PauseView: View {
                 } minimumValueLabel: {
                     Text("0")
                 } maximumValueLabel: {
-                    Text("1")
+                    Text("100")
                 }
-                    .padding()
-                    .onChange(of: volumeValue) { oldVal, newVal in
-                        controller.setVolume(newVal)
-                        volumeValue = newVal
-                    }
-                
+                .padding()
+                .onChange(of: volumeValue) { _, newVal in
+                    controller.setVolume(newVal)
+                }
+
                 Spacer()
-                SomeButton("Resume", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
+                SomeButton("Resume", backgroundCOlor: .bgBlue, foregroundColor: .white, borderColor: .white)
                     .onTapGesture {
                         onUnpause()
                     }
-
-            }.background(
+            }
+            .background(
                 Image("background")
                     .resizable()
                     .scaledToFill()
@@ -54,6 +52,7 @@ struct PauseView: View {
         }
     }
 }
+
 
 struct SomeButton: View {
     let buttonLabel: String
@@ -87,8 +86,8 @@ struct SomeButton: View {
 }
 
 #Preview {
-    
-    PauseView(controller: GameViewController()) {
+    @Previewable @State var previewVolumeValue: Float = 0.5
+    PauseView(controller: GameViewController(), volumeValue: $previewVolumeValue) {
         
     }
 }

@@ -20,6 +20,7 @@ enum GameViewState {
 
 class GameViewController: UIViewController {
     @Published var currentState: GameViewState = .menu
+    @Published var currentVolume: Float = 0.0
     var currMenu: MenuView?
     var pauseMenu: PauseView?
     var restartView: RestartView?
@@ -59,6 +60,7 @@ class GameViewController: UIViewController {
         
         // Music Player
         musicPlayer = Gnomy.MusicPlayer()
+        currentVolume = musicPlayer?.getVolume() ?? 0.5
     }
 
     func startGame() {
@@ -75,19 +77,19 @@ class GameViewController: UIViewController {
     }
     
     func pauseGame() {
+        // custom binding needed to get and set game volume from slider in view
         if pauseMenu == nil {
-            // load the pause view
-            pauseMenu = PauseView(controller: self, onUnpause: {
-                if self.gameScene != nil {
-                    self.resumeGame()
+            pauseMenu = PauseView(controller: self, volumeValue: Binding(
+                get: { self.currentVolume },
+                set: { newValue in
+                    self.currentVolume = newValue
+                    self.musicPlayer?.setVolume(newValue)
                 }
+            ), onUnpause: {
+                self.resumeGame()
             })
-            
         }
-        
-        if pauseMenu != nil {
-            print("Switched to pause view")
-            pauseMenu?.volumeValue = self.getVolume()
+        if let pauseMenu = pauseMenu {
             let hostingController = UIHostingController(rootView: pauseMenu)
             addChild(hostingController)
             hostingController.view.frame = view.bounds
@@ -95,6 +97,7 @@ class GameViewController: UIViewController {
             hostingController.didMove(toParent: self)
         }
     }
+
     
     func resumeGame() {
         if skView != nil {
