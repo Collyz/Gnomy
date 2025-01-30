@@ -64,13 +64,15 @@ class Player: SKSpriteNode {
     // MARK: - Based on the distance from the player and the touch, move the player
     func move(touching touch: CGPoint?) {
         guard let touch = touch else { return }
-        let dist = touch.x - self.position.x
+//        let dist = touch.x - self.position.x
+        self.physicsBody?.velocity = CGVector(dx: (touch.x - self.position.x) * moveSpeed, dy: physicsBody?.velocity.dy ?? 0)
+//        self.position.x = touch.x
+        
+        self.physicsBody?.applyForce(CGVector(dx: (touch.x - self.position.x) * moveSpeed, dy: 0))
+        
         
 //        let action = SKAction.moveTo(x: touch.x, duration: 0.3)
 //        self.run(action)
-        
-        self.physicsBody?.velocity = CGVector(dx: dist * moveSpeed, dy: physicsBody?.velocity.dy ?? 0)
-
 //        if dist >= 0 {
 //            self.position.x += 5
 //        } else {
@@ -84,13 +86,14 @@ class Player: SKSpriteNode {
         guard let velocity = self.physicsBody?.velocity else { return }
         if velocity.dy <= 0 { // Only allow jumping if falling or stationary
             self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 0) // Reset vertical velocity
-            self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 800) // Reset vertical velocity
+            self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 805) // Reset vertical velocity
+            
         }
     }
     
     func stopMovement() {
-////        self.physicsBody?.velocity = CGVector(dx: 0, dy: (self.physicsBody?.velocity.dy)!)
-//        self.removeAllActions()
+        self.physicsBody?.velocity = CGVector(dx: 0, dy: (self.physicsBody?.velocity.dy)!)
+        
     }
 
 }

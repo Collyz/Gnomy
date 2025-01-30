@@ -112,8 +112,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        // called everytime a *move touch* is input
-        touchOffset = touches.first!.location(in: self)
+        for touch in touches {
+            touchOffset = touch.location(in: self)
+            player.move(touching: touchOffset!)
+        }
+//        touchOffset = touches.first?.location(in: self)
+//        player.move(touching: touchOffset!)
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -139,8 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if blocks.count < 7 {
             createPlatform()
         }
-        // move the player
-        player.move(touching: touchOffset)
+        
         // lerp camera movement
         let targetY = max(player.position.y + cameraVerticalOffset, cam.position.y)
         let cameraMoveSpeed: CGFloat = 0.05
@@ -181,6 +184,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if contact.contactNormal.dy > 0 {
             // Player is falling onto the platform
             player.jump()
+            let dirtExplosion = SKEmitterNode(fileNamed: "DirtBounce")!
+            dirtExplosion.position = platformNode.position
+            dirtExplosion.position.y = dirtExplosion.position.y + 10
+            
+            dirtExplosion.zPosition = 2
+            let explodeAction = SKAction.run({self.addChild(dirtExplosion)})
+            let wait = SKAction.wait(forDuration: 1)
+            let removeExplodeAction = SKAction.run({dirtExplosion.removeFromParent()})
+            let sequence = SKAction.sequence([explodeAction, wait, removeExplodeAction])
+            
+            self.run(sequence)
             // scoring
             // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
 
