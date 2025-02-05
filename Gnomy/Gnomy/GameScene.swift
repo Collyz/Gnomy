@@ -184,17 +184,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if contact.contactNormal.dy > 0 {
             // Player is falling onto the platform
             player.jump()
-            let dirtExplosion = SKEmitterNode(fileNamed: "DirtBounce")!
-            dirtExplosion.position = platformNode.position
-            dirtExplosion.position.y = dirtExplosion.position.y + 10
             
-            dirtExplosion.zPosition = 2
-            let explodeAction = SKAction.run({self.addChild(dirtExplosion)})
-            let wait = SKAction.wait(forDuration: 1)
-            let removeExplodeAction = SKAction.run({dirtExplosion.removeFromParent()})
-            let sequence = SKAction.sequence([explodeAction, wait, removeExplodeAction])
-            
-            self.run(sequence)
+            dirtParticles(platformNode)
             // scoring
             // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
 
@@ -309,7 +300,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             physicsWorld.gravity = CGVector(dx: 0, dy: -4)
         }
     }
-    
+    // MARK: - Particles only if the block isn't the base floor
+    func dirtParticles(_ platformNode: Block) {
+        if !platformNode.isBaseFloor {
+            let dirtExplosion = SKEmitterNode(fileNamed: "DirtBounce")!
+            dirtExplosion.position = platformNode.position
+            dirtExplosion.position.y = dirtExplosion.position.y + 10
+            
+            dirtExplosion.zPosition = 2
+            let explodeAction = SKAction.run({self.addChild(dirtExplosion)})
+            let wait = SKAction.wait(forDuration: 1)
+            let removeExplodeAction = SKAction.run({dirtExplosion.removeFromParent()})
+            let sequence = SKAction.sequence([explodeAction, wait, removeExplodeAction])
+            
+            self.run(sequence)
+        }
+    }
     
     // MARK: - Score update
     func scoreUpdate(_ increment: Bool) {
