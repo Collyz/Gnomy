@@ -132,6 +132,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Generate and remove blocks
         for block in blocks {
             if cam.position.y - (block.position.y - block.size.height) > (self.bounds.height / 2) + 100{
+                // blocks will score even if passed (love past me fr fr)
                 if(block.scored == false) {
                     scoreUpdate(true)
                     block.scored = true;
