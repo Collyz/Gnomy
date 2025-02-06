@@ -18,6 +18,7 @@ struct PhysicsCategory {
 }
 // Block Atlas/
 let blockAtlas = SKTextureAtlas(named: "Blocks")
+let powerupAtlas = SKTextureAtlas(named: "PowerUps")
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     var viewController: GameViewController?
@@ -28,6 +29,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var platformY: CGFloat = -200
     private let nextAddY: CGFloat = 280
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
+    private let powerupNames: Array<String> = ["spring"]
     private var touchOffset: CGPoint?
 //    private let pregenerateBlocks: Int = 1
     private var platformSize: CGSize?
@@ -178,22 +180,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         
         let playerBody = (contact.bodyA.node?.name == "player") ? contact.bodyA : contact.bodyB
-        let platformBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
+        let otherBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
         
-        guard let platformNode = platformBody.node as? Block else { return }
+        if let platformNode = otherBody.node as? Block {
         // Ensure the player is landing on the top of the platform
-        if contact.contactNormal.dy > 0 {
-            // Player is falling onto the platform
-            player.jump()
-            
-            dirtParticles(platformNode)
-            // scoring
-            // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
-
-            if platformNode.scored == false && !platformNode.isBaseFloor {
-                platformNode.scored = true
-                scoreUpdate(true)
+            if contact.contactNormal.dy > 0 {
+                // Player is falling onto the platform
+                player.jump()
+                
+                dirtParticles(platformNode)
+                // scoring
+                // TODO: Decide if scoring should be based on blocks jumped on or blocks passed for future updates where there are powerups and enemies
+                // Scoring
+                if platformNode.scored == false && !platformNode.isBaseFloor {
+                    platformNode.scored = true
+                    scoreUpdate(true)
+                }
             }
+        } else if let springNode = otherBody.node as? Spring {
+            // Ensure the player is landing on top of the spring
+            print("Player hit the spring!")
+            
+            // Perform a super jump
+                player.springJump()
+            
+            // Optional: Add a bounce animation or particle effect for spring
+            springNode.bounceEffect()
         }
     }
     
@@ -232,8 +244,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         let block = Block(blockNames[(score / 100) % blockNames.count], platformSize!, blockPos, nextAddY, &platformY)
-        
         block.moving = moveBlock
+        
+        let currSeconds = Calendar.current.component(.second, from: Date())
+        if !block.moving && currSeconds == 30 || currSeconds == 58{
+            let spring = Spring(powerupNames[0], blockPos)
+            addChild(spring)
+        }
         
         addChild(block)
         blocks.append(block)
@@ -359,6 +376,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreUpdate(false)
         for block in blocks {
             block.removeFromParent()
+        }
+        for child in self.children {
+            if child is Spring {
+                child.removeFromParent()
+            }
         }
         blocks.removeAll()
         platformY = 210
