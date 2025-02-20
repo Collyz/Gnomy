@@ -12,11 +12,11 @@ import CoreData
 
 extension Score {
 
-    @nonobjc public class func createFetchRequest() -> NSFetchRequest<Score> {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<Score> {
         return NSFetchRequest<Score>(entityName: "Score")
     }
 
-    @NSManaged public var localHighscore: Int64
+    @NSManaged public var localHighscore: NSNumber?
     @NSManaged public var globalHighscore: Int64
 
 }

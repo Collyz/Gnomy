@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24D70" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="Score" representedClassName="Score" syncable="YES">
-        <attribute name="highscore" attributeType="Integer 64" defaultValueString="-1" usesScalarValueType="NO"/>
+        <attribute name="globalHighscore" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="localHighscore" attributeType="Integer 64" defaultValueString="-1" usesScalarValueType="NO"/>
     </entity>
 </model>
