@@ -9,7 +9,7 @@ import SwiftUI
 import SpriteKit
 import CoreData
 struct MenuView: View {
-    var highScore: Int64
+    @Binding var highScore: Int64
     var onStartTapped: () -> Void
     
     var body: some View {
@@ -35,5 +35,6 @@ struct MenuView: View {
 }
 
 #Preview {
-    MenuView(highScore: 0, onStartTapped: {})
+    @Previewable @State var previewHighScore: Int64 = 0
+    MenuView(highScore: $previewHighScore, onStartTapped: {})
 }

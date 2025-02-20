@@ -10,7 +10,7 @@ import SwiftUI
 import SpriteKit
 
 struct RestartView: View {
-    var highScore: Int64
+    @Binding var highScore: Int64
     @State var controller: GameViewController
     var onRestart: () -> Void
     
@@ -18,10 +18,10 @@ struct RestartView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                SharedText(fontSize: 50, text: "High Score: \(highScore)", fontStyle: .largeTitle, color: .white)
+                SharedText(fontSize: 30, text: "High Score: \(highScore)", fontStyle: .largeTitle, color: .white)
                 Text("")
-                SharedText(fontSize: 50, text: "Score: \(controller.currScore())", fontStyle: .largeTitle, color: .white)
-                Spacer()
+                SharedText(fontSize: 30, text: "Score: \(controller.currScore())", fontStyle: .largeTitle, color: .white)
+                Text("")
                 SomeButton("Restart", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onRestart()
@@ -38,8 +38,9 @@ struct RestartView: View {
 }
 
 #Preview {
+    @Previewable @State var previewHighScore: Int64 = 0
     let controller = GameViewController()
-    RestartView(highScore: 0, controller: controller) {
+    RestartView(highScore: $previewHighScore, controller: controller) {
 
     }
 }

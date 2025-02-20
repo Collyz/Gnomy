@@ -9,9 +9,9 @@ import SwiftUI
 import SpriteKit
 
 struct PauseView: View {
-    var highScore: Int64
     @State var controller: GameViewController
     @Binding var volumeValue: Float
+    @Binding var highScore: Int64
     var onUnpause: () -> Void
 
     var body: some View {
@@ -53,5 +53,6 @@ struct PauseView: View {
 
 #Preview {
     @Previewable @State var previewVolumeValue: Float = 0.5
-    PauseView(highScore: 0, controller: GameViewController(), volumeValue: $previewVolumeValue) {}
+    @Previewable @State var previewHighScore: Int64 = 0
+    PauseView(controller: GameViewController(), volumeValue: $previewVolumeValue, highScore: $previewHighScore) {}
 }
