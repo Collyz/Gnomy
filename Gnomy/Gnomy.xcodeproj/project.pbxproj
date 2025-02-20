@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		00E10FE52D67040600438BDC /* AWSS3 in Frameworks */ = {isa = PBXBuildFile; productRef = 00E10FE42D67040600438BDC /* AWSS3 */; };
+		00E10FE82D67044C00438BDC /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 00E10FE72D67044C00438BDC /* SwiftyJSON */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		002468A72D166D7E00EFD914 /* Gnomy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gnomy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				00E10FE82D67044C00438BDC /* SwiftyJSON in Frameworks */,
+				00E10FE52D67040600438BDC /* AWSS3 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,8 @@
 			);
 			name = Gnomy;
 			packageProductDependencies = (
+				00E10FE42D67040600438BDC /* AWSS3 */,
+				00E10FE72D67044C00438BDC /* SwiftyJSON */,
 			);
 			productName = Gnomy;
 			productReference = 002468A72D166D7E00EFD914 /* Gnomy.app */;
@@ -94,6 +103,10 @@
 			);
 			mainGroup = 0024689E2D166D7E00EFD914;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				00E10FE32D67040600438BDC /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
+				00E10FE62D67044C00438BDC /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 002468A82D166D7E00EFD914 /* Products */;
 			projectDirPath = "";
@@ -334,6 +347,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		00E10FE32D67040600438BDC /* XCRemoteSwiftPackageReference "aws-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/awslabs/aws-sdk-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.22;
+			};
+		};
+		00E10FE62D67044C00438BDC /* XCRemoteSwiftPackageReference "SwiftyJSON" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyJSON/SwiftyJSON.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		00E10FE42D67040600438BDC /* AWSS3 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 00E10FE32D67040600438BDC /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSS3;
+		};
+		00E10FE72D67044C00438BDC /* SwiftyJSON */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 00E10FE62D67044C00438BDC /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
+			productName = SwiftyJSON;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0024689F2D166D7E00EFD914 /* Project object */;
 }

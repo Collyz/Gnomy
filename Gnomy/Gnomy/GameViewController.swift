@@ -46,10 +46,8 @@ class GameViewController: UIViewController {
         }
         
 
-        
-
         // Start with the SwiftUI MenuView
-        currMenu = MenuView(onStartTapped: {
+        currMenu = MenuView(highScore: getHighScore()!, onStartTapped: {
             self.startGame()
         })
         let hostingController = UIHostingController(rootView: currMenu)
@@ -92,7 +90,7 @@ class GameViewController: UIViewController {
     func pauseGame() {
         // custom binding needed to get and set game volume from slider in view
         if pauseMenu == nil {
-            pauseMenu = PauseView(controller: self, volumeValue: Binding(
+            pauseMenu = PauseView(highScore: getHighScore()!, controller: self, volumeValue: Binding(
                 get: { self.currentVolume },
                 set: { newValue in
                     self.currentVolume = newValue
@@ -128,7 +126,7 @@ class GameViewController: UIViewController {
     func lossGame() {
         if restartView == nil {
             // load restart view
-            restartView = RestartView(controller: self, onRestart: {
+            restartView = RestartView(highScore: getHighScore()!, controller: self, onRestart: {
                 self.restartGame()
             })
         }
@@ -174,6 +172,7 @@ class GameViewController: UIViewController {
     }
     
     func getHighScore() -> Int64? {
+//        return 0
         let context = container.viewContext
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         
@@ -182,7 +181,7 @@ class GameViewController: UIViewController {
             return scores.first?.highscore
         } catch {
             print("Error fetching high score: \(error)")
-            return nil
+            return -1
         }
     }
     

@@ -9,13 +9,14 @@ import SwiftUI
 import SpriteKit
 import CoreData
 struct MenuView: View {
+    var highScore: Int64
     var onStartTapped: () -> Void
     
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                Text("Your highscore!")
+                SharedText(fontSize: 20, text: "High Score: \(highScore)", fontStyle: .title, color: .white)
                 SharedText(fontSize: 40, text: "Help him climb!", fontStyle: .title3, color: .white)
                     .bold()
                 Spacer()
@@ -34,5 +35,5 @@ struct MenuView: View {
 }
 
 #Preview {
-    MenuView { }
+    MenuView(highScore: 0, onStartTapped: {})
 }
