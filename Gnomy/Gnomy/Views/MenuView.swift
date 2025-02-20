@@ -7,19 +7,18 @@
 
 import SwiftUI
 import SpriteKit
-
+import CoreData
 struct MenuView: View {
+    @StateObject private var scoreDataStack = ScoreDataStack.shared
     var onStartTapped: () -> Void
     
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                Text("Help him climb!")
-                    .font(.custom("Chalkduster", size: 40))
-                    .font(.title3)
+                Text("Your highscore!")
+                SharedText(fontSize: 40, text: "Help him climb!", fontStyle: .title3, color: .white)
                     .bold()
-                    .foregroundStyle(Color.white)
                 Spacer()
                 SomeButton("Start!", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {

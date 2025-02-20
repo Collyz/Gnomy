@@ -17,10 +17,7 @@ struct RestartView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                Text("Score: \(controller.currScore())")
-                    .font(.custom("Chalkduster", size: 50))
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.white)
+                SharedText(fontSize: 50, text: "Score: \(controller.currScore())", fontStyle: .largeTitle, color: .white)
                 Spacer()
                 SomeButton("Restart", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {

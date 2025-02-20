@@ -199,7 +199,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         } else if let springNode = otherBody.node as? Spring {
             // Ensure the player is landing on top of the spring
-            print("Player hit the spring!")
+//            print("Player hit the spring!")
             
             // Perform a super jump
                 player.springJump()
