@@ -45,8 +45,7 @@ class GameViewController: UIViewController {
             }
         }
         
-        let highScore = fetchHighScore()
-        print("Current High Score: \(highScore)")
+
         
 
         // Start with the SwiftUI MenuView
@@ -140,6 +139,9 @@ class GameViewController: UIViewController {
             view.addSubview(hostingController.view)
             hostingController.didMove(toParent: self)
         }
+        // Updating the highscore when you finally lose
+        updateHighScore(newScore: currScore())
+        
         musicPlayer?.pauseBgMusic()
     }
     
@@ -171,36 +173,37 @@ class GameViewController: UIViewController {
         return gameScene?.getScore() ?? 0
     }
     
-    func saveContext() {
-        if container.viewContext.hasChanges {
-            do{
-                try container?.viewContext.save()
-            } catch {
-                print("An error occured while saving: \(error)")
-            }
+    func getHighScore() -> Int64? {
+        let context = container.viewContext
+        let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
+        
+        do {
+            let scores = try context.fetch(fetchRequest)
+            return scores.first?.highscore
+        } catch {
+            print("Error fetching high score: \(error)")
+            return nil
         }
     }
     
-    func fetchHighScore() -> Int64 {
+    func updateHighScore(newScore: Int) {
         let context = container.viewContext
         let fetchRequest = Score.createFetchRequest()
-        
         do {
-            let results = try context.fetch(fetchRequest)
-            if let highScore = results.first {
-                return highScore.highscore
-            } else {
-                // If no score exists, create a new one with a default value
-                let newScore = Score(context: context)
-                newScore.highscore = 0
-                try context.save()
-                return 0
+            let scores = try context.fetch(fetchRequest)
+            if let existingScore = scores.first {
+                if newScore > existingScore.highscore {
+                    existingScore.highscore = Int64(newScore)
+                    try context.save()
+//                    print("New high score saved: \(newScore)")
+                }
             }
         } catch {
-            print("Failed to fetch high score: \(error)")
-            return 0
+            print("Error updating high score: \(error)")
         }
     }
+
+
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         if UIDevice.current.userInterfaceIdiom == .phone {
