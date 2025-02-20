@@ -9,18 +9,17 @@ import SwiftUI
 import SpriteKit
 
 struct PauseView: View {
+    @ObservedObject var viewModel: GameViewModel
     @State var controller: GameViewController
     @Binding var volumeValue: Float
-    @Binding var highScore: Int64
-    @Binding var globalHighScore: Int64
     var onUnpause: () -> Void
 
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                SharedText(fontSize: 30, text: "Global High Score: \(globalHighScore)", fontStyle: .title, color: .white)
-                SharedText(fontSize: 30, text: "High Score: \(highScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 30, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 30, text: "High Score: \(viewModel.highScore)", fontStyle: .title, color: .white)
                 SharedText(fontSize: 24, text: "Master Volume", fontStyle: .title, color: .white)
                 Slider(
                     value: $volumeValue,
@@ -54,12 +53,10 @@ struct PauseView: View {
 }
 
 #Preview {
+    @Previewable @State var previewViewModel = GameViewModel(context: .init())
     @Previewable @State var previewVolumeValue: Float = 0.5
-    @Previewable @State var previewHighScore: Int64 = 0
-    @Previewable @State var previewGlobalHighScore: Int64 = 0
-    PauseView(controller: GameViewController(),
-              volumeValue: $previewVolumeValue,
-              highScore: $previewHighScore,
-              globalHighScore: $previewGlobalHighScore
-    ) {}
+    
+    PauseView(viewModel: previewViewModel,
+              controller: GameViewController(),
+              volumeValue: $previewVolumeValue) {}
 }

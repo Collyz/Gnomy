@@ -16,8 +16,8 @@ extension Score {
         return NSFetchRequest<Score>(entityName: "Score")
     }
 
-    @NSManaged public var localHighscore: Int64
-    @NSManaged public var globalHighscore: Int64
+    @NSManaged public var localHighScore: Int64
+    @NSManaged public var globalHighScore: Int64
 
 }
 

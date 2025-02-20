@@ -9,16 +9,15 @@ import SwiftUI
 import SpriteKit
 import CoreData
 struct MenuView: View {
-    @Binding var highScore: Int64
-    @Binding var globalHighScore: Int64
+    @ObservedObject var viewModel: GameViewModel
     var onStartTapped: () -> Void
     
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                SharedText(fontSize: 20, text: "Global High Score: \(highScore)", fontStyle: .title, color: .white)
-                SharedText(fontSize: 20, text: "High Score: \(highScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 20, text: "High Score: \(viewModel.highScore)", fontStyle: .title, color: .white)
                 SharedText(fontSize: 40, text: "Help him climb!", fontStyle: .title3, color: .white)
                     .bold()
                 Spacer()
@@ -39,7 +38,6 @@ struct MenuView: View {
 #Preview {
     @Previewable @State var previewHighScore: Int64 = 0
     @Previewable @State var previewGlobalHighScore: Int64 = 0
-    MenuView(highScore: $previewHighScore,
-             globalHighScore: $previewGlobalHighScore,
-             onStartTapped: {})
+    @Previewable @State var previewViewModel = GameViewModel(context: .init())
+    MenuView(viewModel: previewViewModel, onStartTapped: {})
 }
