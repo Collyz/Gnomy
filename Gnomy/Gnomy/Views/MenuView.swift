@@ -9,7 +9,6 @@ import SwiftUI
 import SpriteKit
 import CoreData
 struct MenuView: View {
-    @StateObject private var scoreDataStack = ScoreDataStack.shared
     var onStartTapped: () -> Void
     
     var body: some View {

@@ -247,7 +247,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         block.moving = moveBlock
         
         let currSeconds = Calendar.current.component(.second, from: Date())
-        if !block.moving && currSeconds == 30 || currSeconds == 58{
+        if !block.moving && (currSeconds == 30 || currSeconds == 58) {
             let spring = Spring(powerupNames[0], blockPos)
             addChild(spring)
         }
