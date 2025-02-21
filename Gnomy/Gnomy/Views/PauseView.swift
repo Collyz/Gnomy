@@ -18,8 +18,10 @@ struct PauseView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                SharedText(fontSize: 30, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .title, color: .white)
-                SharedText(fontSize: 30, text: "High Score: \(viewModel.highScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .title, color: .white)
+                Text("\n")
+                SharedText(fontSize: 20, text: "High Score: \(viewModel.highScore)", fontStyle: .title, color: .white)
+                Text("\n")
                 SharedText(fontSize: 24, text: "Master Volume", fontStyle: .title, color: .white)
                 Slider(
                     value: $volumeValue,
@@ -53,7 +55,7 @@ struct PauseView: View {
 }
 
 #Preview {
-    @Previewable @State var previewViewModel = GameViewModel(context: .init())
+    @Previewable @State var previewViewModel = GameViewModel(context: .preview)
     @Previewable @State var previewVolumeValue: Float = 0.5
     
     PauseView(viewModel: previewViewModel,

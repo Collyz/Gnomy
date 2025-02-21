@@ -38,7 +38,6 @@ class GameViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-//        print(UIDevice.current.name)
         // Core Data Setup
         container = NSPersistentContainer(name: "HighScore")
         container.loadPersistentStores { _, error in
@@ -127,8 +126,12 @@ class GameViewController: UIViewController {
         musicPlayer?.playBgMusic()
     }
 
+    // Updates the high score and global score
     func lossGame() {
-        viewModel.updateHighScore(newScore: Int64(self.currScore()))
+        let roundScore = Int64(self.currScore())
+        viewModel.updateHighScore(newScore: roundScore)
+        viewModel.updateDeviceGlobalHighScore(newScore: roundScore)
+        
         if restartView == nil {
             restartView = RestartView(
                 viewModel: self.viewModel,

@@ -86,7 +86,7 @@ class Player: SKSpriteNode {
         guard let velocity = self.physicsBody?.velocity else { return }
         if velocity.dy <= 0 { // Only allow jumping if falling or stationary
             self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 0) // Reset vertical velocity
-            self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 805) // Reset vertical velocity
+            self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 8005) // Reset vertical velocity
             
         }
     }

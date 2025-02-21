@@ -42,7 +42,7 @@ struct RestartView: View {
 #Preview {
     @Previewable @State var previewHighScore: Int64 = 0
     @Previewable @State var previewGlobalHighScore: Int64 = 0
-    @Previewable @State var previewViewModel = GameViewModel(context: .init())
+    @Previewable @State var previewViewModel = GameViewModel(context: .preview)
     let controller = GameViewController()
     RestartView(viewModel: previewViewModel,
                 controller: controller ) {}

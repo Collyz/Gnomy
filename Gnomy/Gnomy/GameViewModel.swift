@@ -5,21 +5,48 @@
 //  Created by Mohammed Mowla on 2/20/25.
 //
 
+import SwiftUI
 import Combine
 import CoreData
 import AWSS3
 import ClientRuntime
 import SwiftyJSON
 
-class GameViewModel: ObservableObject {
+struct User: Identifiable {
+    let id = UUID()
+    let name: String
+    let score: Int64
+}
+
+
+// Just for previews (remove for publish launch
+extension NSManagedObjectContext {
+    static var preview: NSManagedObjectContext {
+        let container = NSPersistentContainer(name: "HighScore")
+        container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null") // Use in-memory store
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                fatalError("Failed to load preview Core Data store: \(error)")
+            }
+        }
+        return container.viewContext
+    }
+}
+
+@MainActor class GameViewModel: ObservableObject {
     @Published var highScore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
+    @Published var players: [User] = []
     private var context: NSManagedObjectContext
 
     init(context: NSManagedObjectContext) {
         self.context = context
         fetchHighScore()
         fetchDeviceGlobalHighScore()
+        Task {
+            await fetchDataFromS3()
+            await UpdateDeviceGlobalHighScore()	
+        }
     }
 
     // Get the local high score if it exists, otherwise create it and assign a value of zero
@@ -50,9 +77,16 @@ class GameViewModel: ObservableObject {
                 existingHighScore.localHighScore = newScore
                 // Save the changes
                 try context.save()
-                // Updating the highScore with the new score if it is bigger than the old
+                // Updating the highScore that is shown in the views
                 DispatchQueue.main.async {
                     self.highScore = existingHighScore.localHighScore
+                }
+                // Update the s3 score since your new score is better than the one stored in the cloud
+                DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(0.5)) {
+                    Task {
+                        print("UPDATING S3 SCORE")
+                        await self.UpdateS3()
+                    }
                 }
             }
         } catch {
@@ -93,6 +127,10 @@ class GameViewModel: ObservableObject {
         }
     }
     
+    func UpdateDeviceGlobalHighScore() async{
+        updateDeviceGlobalHighScore(newScore: players[0].score)
+    }
+    
     // Test the s3 connection
     func testS3Connection() async {
         do {
@@ -109,30 +147,32 @@ class GameViewModel: ObservableObject {
     }
     
     // Function to fetch data from S3 and print it
+    // Fetch player data from S3 and store it
     func fetchDataFromS3() async {
         do {
-            let serviceHandler = try await ServiceHandler() // Initialize the service handler
+            let serviceHandler = try await ServiceHandler()
             let bucketName = "gnomyleaderboardbucket"
             let fileName = "data.json"
-            
-            // Read the file from S3
+
             let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
-            
-            // Convert the Data to a string for printing
+
             if let jsonString = String(data: fileData, encoding: .utf8) {
-                print("Fetched JSON data")
-                
-                // Parse the JSON using SwiftyJSON
+                print("Received JSON: \(jsonString)") // Debugging log
+
                 let json = try JSON(data: fileData)
-                if let players = json["players"].array {
-                    for player in players {
-                        if let name = player["name"].string, let highscore = player["highscore"].int {
-                            print("Player: \(name), Highscore: \(highscore)")
+                var tempPlayers: [User] = []
+
+                if let playersArray = json["players"].array {
+                    for player in playersArray {
+                        if let name = player["name"].string, let highscore = player["highscore"].int64 {
+                            tempPlayers.append(User(name: name, score: highscore))
                         }
                     }
                 } else {
                     print("No players found in the JSON.")
                 }
+                // Sorting and storing the player information
+                self.players = tempPlayers.sorted { $0.score > $1.score }
             } else {
                 print("Failed to convert data to string.")
             }
@@ -141,47 +181,7 @@ class GameViewModel: ObservableObject {
         }
     }
     
-    func fetchGlobalHighscore() async -> Int64{
-        do {
-            let serviceHandler = try await ServiceHandler() // Initialize the service handler
-            let bucketName = "gnomyleaderboardbucket"
-            let fileName = "data.json"
-            
-            // Read the file from S3
-            let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
-            
-            var maxScore: Int64 = -1
-            // Convert the Data to a string for printing
-            if let jsonString = String(data: fileData, encoding: .utf8) {
-                print("Fetched JSON data")
-                
-                // Parse the JSON using SwiftyJSON
-                let json = try JSON(data: fileData)
-                if let players = json["players"].array {
-                    for player in players {
-                        if player["name"] == "gnomy_player" {
-                            if let tempScore = player["highscore"].int64 {
-                                if maxScore < tempScore{
-                                    maxScore = tempScore
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    print("No players found in the JSON.")
-                }
-            } else {
-                print("Failed to convert data to string.")
-            }
-            print("biggest score from json: \(maxScore)")
-            return maxScore
-        } catch {
-            print("Failed to fetch data from S3: \(error)")
-        }
-        return -1
-    }
-    
-    func UpdateGlobalHighscore() async {
+    func UpdateS3() async {
         do {
             let serviceHandler = try await ServiceHandler() // Initialize the service handler
             let bucketName = "gnomyleaderboardbucket"
@@ -197,29 +197,34 @@ class GameViewModel: ObservableObject {
             var updated = false
             if var players = json["players"].array {
                 for i in 0..<players.count {
-                    if players[i]["name"].string == "gnomy_player" {
-                        players[i]["highscore"] = JSON(globalHighScore) // Update Alice's highscore
+                    if players[i]["name"].string == UIDevice.current.name {
+                        if players[i]["highscore"].int64Value > highScore {
+                            players[i]["highscore"] = JSON(highScore) // Update the players highscore
+                            updated = true
+                            break
+                        }
                         updated = true
                         break
                     }
                 }
-                // If gnomy_player wasn't found, add her
+                // If phone_name wasn't found, add it
                 if !updated {
-                    players.append(["name": "gnomy_player", "highscore": globalHighScore])
+                    players.append(["name": UIDevice.current.name, "highscore": highScore])
                 }
                 json["players"] = JSON(players) // Set the updated players array
             }
 
             // Step 4: Convert the updated JSON back to Data
             let updatedData = try json.rawData()
-
             // Step 5: Upload the updated file to S3
             try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
             print("File updated successfully.")
         } catch {
             print("Error updating file: \(error)")
         }
-        
+        await fetchDataFromS3()
     }
+    
+    
     
 }
