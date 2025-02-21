@@ -81,6 +81,7 @@ extension NSManagedObjectContext {
                 // Updating the highScore that is shown in the views
                 DispatchQueue.main.async {
                     self.highScore = existingHighScore!.localHighScore
+                    print("local high score: \(self.highScore)")
                 }
                 // Update the s3 score since your new score is better than the one stored in the cloud
                 DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(0.5)) {
@@ -90,10 +91,12 @@ extension NSManagedObjectContext {
                     }
                 }
             }
+            updateDeviceGlobalHighScore(newScore: newScore)
             
         } catch {
             print("Failed to update high score: \(error)")
         }
+        
     }
     
     // Get the device global high score (i.e. the high score that is pulled from s3
@@ -123,6 +126,8 @@ extension NSManagedObjectContext {
                 DispatchQueue.main.async {
                     self.globalHighScore = newScore
                 }
+            } else {
+//                print("not updating, local score higher than global score")
             }
         } catch {
             print("Failed to update global high score: \(error)")
@@ -159,7 +164,8 @@ extension NSManagedObjectContext {
             let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
 
             if let jsonString = String(data: fileData, encoding: .utf8) {
-                print("Received JSON: \(jsonString)") // Debugging log
+//                print("Received JSON: \(jsonString)")
+//                print("\n")
 
                 let json = try JSON(data: fileData)
                 var tempPlayers: [User] = []
@@ -191,7 +197,7 @@ extension NSManagedObjectContext {
 
             // Step 1: Read the current file from S3
             let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
-
+//            print("read data: \(fileData)")
             // Step 2: Parse the existing JSON
             var json = try JSON(data: fileData)
             
@@ -200,10 +206,8 @@ extension NSManagedObjectContext {
             if var players = json["players"].array {
                 for i in 0..<players.count {
                     if players[i]["name"].string == UIDevice.current.name {
-                        if players[i]["highscore"].int64Value > highScore {
+                        if players[i]["highscore"].int64Value < highScore {
                             players[i]["highscore"] = JSON(highScore) // Update the players highscore
-                            updated = true
-                            break
                         }
                         updated = true
                         break
