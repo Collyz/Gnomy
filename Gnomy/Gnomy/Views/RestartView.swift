@@ -18,12 +18,12 @@ struct RestartView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                SharedText(fontSize: 30, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .largeTitle, color: .white)
-                Text("")
-                SharedText(fontSize: 30, text: "High Score: \(viewModel.highScore)", fontStyle: .largeTitle, color: .white)
-                Text("")
-                SharedText(fontSize: 30, text: "Score: \(controller.currScore())", fontStyle: .largeTitle, color: .white)
-                Text("")
+                SharedText(fontSize: 24, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .largeTitle, color: .white)
+                Text("\n")
+                SharedText(fontSize: 24, text: "High Score: \(viewModel.highScore)", fontStyle: .largeTitle, color: .white)
+                Text("\n")
+                SharedText(fontSize: 24, text: "Score: \(controller.currScore())", fontStyle: .largeTitle, color: .white)
+                Text("\n")
                 SomeButton("Restart", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onRestart()

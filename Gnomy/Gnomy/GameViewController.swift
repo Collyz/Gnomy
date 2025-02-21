@@ -130,8 +130,6 @@ class GameViewController: UIViewController {
     func lossGame() {
         let roundScore = Int64(self.currScore())
         viewModel.updateHighScore(newScore: roundScore)
-        viewModel.updateDeviceGlobalHighScore(newScore: roundScore)
-        
         if restartView == nil {
             restartView = RestartView(
                 viewModel: self.viewModel,

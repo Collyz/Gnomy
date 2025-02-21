@@ -20,7 +20,7 @@ struct PauseView: View {
                 Spacer()
                 SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .title, color: .white)
                 Text("\n")
-                SharedText(fontSize: 20, text: "High Score: \(viewModel.highScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 20, text: "Your High Score: \(viewModel.highScore)", fontStyle: .title, color: .white)
                 Text("\n")
                 SharedText(fontSize: 24, text: "Master Volume", fontStyle: .title, color: .white)
                 Slider(

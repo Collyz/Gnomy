@@ -72,14 +72,15 @@ extension NSManagedObjectContext {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
             let scores = try context.fetch(fetchRequest)
-            if let existingHighScore = scores.first, newScore > existingHighScore.localHighScore {
+            let existingHighScore = scores.first
+            if newScore > existingHighScore!.localHighScore {
                 // Apply the new score if it is bigger than the stored score
-                existingHighScore.localHighScore = newScore
+                existingHighScore!.localHighScore = newScore
                 // Save the changes
                 try context.save()
                 // Updating the highScore that is shown in the views
                 DispatchQueue.main.async {
-                    self.highScore = existingHighScore.localHighScore
+                    self.highScore = existingHighScore!.localHighScore
                 }
                 // Update the s3 score since your new score is better than the one stored in the cloud
                 DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(0.5)) {
@@ -89,6 +90,7 @@ extension NSManagedObjectContext {
                     }
                 }
             }
+            
         } catch {
             print("Failed to update high score: \(error)")
         }
