@@ -135,7 +135,11 @@ extension NSManagedObjectContext {
     }
     
     func UpdateDeviceGlobalHighScore() async{
-        updateDeviceGlobalHighScore(newScore: players[0].score)
+        if players.count > 0 {
+            updateDeviceGlobalHighScore(newScore: players[0].score)
+        } else {
+            print("nothing pulled from servers")
+        }
     }
     
     // Test the s3 connection

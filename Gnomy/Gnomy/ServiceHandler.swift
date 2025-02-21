@@ -31,7 +31,7 @@ public class ServiceHandler {
     public init() async throws {
         do {
             configuration = try await S3Client.S3ClientConfiguration()
-         //   configuration.region = "us-east-2" // Uncomment this to set the region programmatically.
+            configuration.region = "us-east-2" // Uncomment this to set the region programmatically.
             client = S3Client(config: configuration)
         }
         catch {
