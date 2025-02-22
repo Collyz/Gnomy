@@ -5,16 +5,15 @@
 //  Created by Mohammed Mowla on 2/20/25.
 //
 
-import AWSS3
-
 import Foundation
 import AWSS3
 import Smithy
 import ClientRuntime
+import AWSSDKIdentity
 
 /// A class containing all the code that interacts with the AWS SDK for Swift.
 public class ServiceHandler {
-    let configuration: S3Client.S3ClientConfiguration
+    let s3Configuration: S3Client.S3ClientConfiguration
     let client: S3Client
 
     enum HandlerError: Error {
@@ -29,10 +28,20 @@ public class ServiceHandler {
     /// - Returns: A new ``ServiceHandler`` object, ready to be called to
     ///            execute AWS operations.
     public init() async throws {
+        let credentials = AWSCredentialIdentity(
+            accessKey: ProcessInfo.processInfo.environment["AWS_ACCESS_KEY"] ?? "",
+            secret: ProcessInfo.processInfo.environment["AWS_SECRET_KEY"] ?? "",
+            sessionToken: ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"] ?? ""
+        )
+        let identityResolver = try StaticAWSCredentialIdentityResolver(credentials)
         do {
-            configuration = try await S3Client.S3ClientConfiguration()
-            configuration.region = "us-east-2" // Uncomment this to set the region programmatically.
-            client = S3Client(config: configuration)
+            s3Configuration = try await S3Client.S3ClientConfiguration(
+                awsCredentialIdentityResolver: identityResolver,
+                region: "us-east-2"
+            )
+            // configuration.region = "us-east-2" // Uncomment this to set the region programmatically.
+            client = S3Client(config: s3Configuration)
+            
         }
         catch {
             print("ERROR: ", dump(error, name: "Initializing S3 client"))
@@ -54,7 +63,7 @@ public class ServiceHandler {
         // For regions other than "us-east-1", you must set the locationConstraint in the createBucketConfiguration.
         // For more information, see LocationConstraint in the S3 API guide.
         // https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#API_CreateBucket_RequestBody
-        if let region = configuration.region {
+        if let region = s3Configuration.region {
             if region != "us-east-1" {
                 input.createBucketConfiguration = S3ClientTypes.CreateBucketConfiguration(locationConstraint: S3ClientTypes.BucketLocationConstraint(rawValue: region))
             }
