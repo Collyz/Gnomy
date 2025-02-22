@@ -29,9 +29,9 @@ public class ServiceHandler {
     ///            execute AWS operations.
     public init() async throws {
         let credentials = AWSCredentialIdentity(
-            accessKey: ProcessInfo.processInfo.environment["AWS_ACCESS_KEY"] ?? "",
-            secret: ProcessInfo.processInfo.environment["AWS_SECRET_KEY"] ?? "",
-            sessionToken: ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"] ?? ""
+            accessKey: Bundle.main.object(forInfoDictionaryKey: "AWS_ACCESS_KEY") as? String ?? "",
+            secret: Bundle.main.object(forInfoDictionaryKey: "AWS_SECRET_KEY") as? String ?? ""
+//            sessionToken: ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"] ?? ""
         )
         let identityResolver = try StaticAWSCredentialIdentityResolver(credentials)
         do {
@@ -39,7 +39,7 @@ public class ServiceHandler {
                 awsCredentialIdentityResolver: identityResolver,
                 region: "us-east-2"
             )
-            // configuration.region = "us-east-2" // Uncomment this to set the region programmatically.
+            s3Configuration.region = "us-east-2" // Uncomment this to set the region programmatically.
             client = S3Client(config: s3Configuration)
             
         }

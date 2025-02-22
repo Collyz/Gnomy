@@ -44,6 +44,7 @@ extension NSManagedObjectContext {
         fetchHighScore()
         fetchDeviceGlobalHighScore()
         Task {
+            await testS3Connection()
             await fetchDataFromS3()
             await UpdateDeviceGlobalHighScore()	
         }
