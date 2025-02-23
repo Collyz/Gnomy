@@ -40,20 +40,17 @@ struct SomeButton: View {
 struct SharedText: View {
     let fontSize: CGFloat
     let text: String
-    let fontStyle: Font
     let fontColor: Color
     
-    init(fontSize: CGFloat, text: String, fontStyle: Font, color: Color){
+    init(fontSize: CGFloat, text: String, color: Color){
         self.fontSize = fontSize
         self.text = text
-        self.fontStyle = fontStyle
         self.fontColor = color
     }
     
     var body: some View {
         Text(text)
             .font(.custom("Chalkduster", size: fontSize))
-            .font(fontStyle)
             .foregroundColor(fontColor)
     }
 }

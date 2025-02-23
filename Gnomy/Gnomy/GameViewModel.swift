@@ -19,7 +19,7 @@ struct User: Identifiable {
 }
 
 
-// Just for previews (remove for publish launch
+// Just for previews (remove for publish launch)
 extension NSManagedObjectContext {
     static var preview: NSManagedObjectContext {
         let container = NSPersistentContainer(name: "HighScore")
@@ -34,24 +34,26 @@ extension NSManagedObjectContext {
 }
 
 @MainActor class GameViewModel: ObservableObject {
+    @Published var username: String = "Guest"
     @Published var highScore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
     @Published var players: [User] = []
+    
     private var context: NSManagedObjectContext
 
     init(context: NSManagedObjectContext) {
         self.context = context
-        fetchHighScore()
-        fetchDeviceGlobalHighScore()
+        FetchUsername()
+        FetchHighScore()
+        FetchDeviceGlobalHighScore()
         Task {
-            await testS3Connection()
-            await fetchDataFromS3()
+            await FetchDataFromS3()
             await UpdateDeviceGlobalHighScore()	
         }
     }
 
     // Get the local high score if it exists, otherwise create it and assign a value of zero
-    func fetchHighScore() {
+    func FetchHighScore() {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
             let scores = try context.fetch(fetchRequest)
@@ -69,7 +71,7 @@ extension NSManagedObjectContext {
     }
 
     // Update the local high score with the new value (should be the updated curr score from the game)
-    func updateHighScore(newScore: Int64) {
+    func UpdateHighScore(newScore: Int64) {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
             let scores = try context.fetch(fetchRequest)
@@ -92,7 +94,7 @@ extension NSManagedObjectContext {
                     }
                 }
             }
-            updateDeviceGlobalHighScore(newScore: newScore)
+            UpdateDeviceGlobalHighScore(newScore: newScore)
             
         } catch {
             print("Failed to update high score: \(error)")
@@ -101,7 +103,7 @@ extension NSManagedObjectContext {
     }
     
     // Get the device global high score (i.e. the high score that is pulled from s3
-    func fetchDeviceGlobalHighScore() {
+    func FetchDeviceGlobalHighScore() {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
             let scores = try context.fetch(fetchRequest)
@@ -117,7 +119,7 @@ extension NSManagedObjectContext {
     }
     
     // Update the global high score (i.e. update the s3 json file if possible)
-    func updateDeviceGlobalHighScore(newScore: Int64) {
+    func UpdateDeviceGlobalHighScore(newScore: Int64) {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
             let scores = try context.fetch(fetchRequest)
@@ -137,14 +139,66 @@ extension NSManagedObjectContext {
     
     func UpdateDeviceGlobalHighScore() async{
         if players.count > 0 {
-            updateDeviceGlobalHighScore(newScore: players[0].score)
+            UpdateDeviceGlobalHighScore(newScore: players[0].score)
         } else {
             print("nothing pulled from servers")
         }
     }
     
+    func FetchUsername() {
+        let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
+        do {
+            let request = try context.fetch(fetchRequest)
+            if let data = request.first {
+                if data.username != "Guest" {
+                    // If the username already exists, just grab it
+                    print("The username is: \(data.username)")
+                    self.username = data.username
+                } else {
+                    print("setting username to Guest")
+                    data.username = "Guest"
+                    try context.save()
+                    // Setting the username to the default Guest username
+                    self.username = data.username
+                }
+            }
+        } catch {
+            print("Failed to find username: \(error)")
+        }
+    }
+    
+    func UpdateUsername(newUsername: String) {
+        let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
+        do {
+            let request = try context.fetch(fetchRequest)
+            if let data = request.first {
+                data.username = newUsername
+                try context.save()
+                self.username = newUsername
+            }
+        } catch {
+            print("Error updating username: \(error)")
+        }
+    }
+    
+    
+    // Used only in the menu view to set the username during the first login
+    func SetUsernameFromUser(tryName: String) -> Bool {
+        // Remove newline characters and empty spaces
+        let strippedName = tryName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if strippedName.isEmpty {
+            print("not changing default Guest username, invalid username [update the view error message]")
+            return false
+        } else {
+            UpdateUsername(newUsername: strippedName)
+            return true
+        }
+    }
+
+    
     // Test the s3 connection
-    func testS3Connection() async {
+    func TestS3Connection() async {
         do {
             let serviceHandler = try await ServiceHandler() // Initialize the service handler
             let bucketName = "gnomyleaderboardbucket"
@@ -160,7 +214,7 @@ extension NSManagedObjectContext {
     
     // Function to fetch data from S3 and print it
     // Fetch player data from S3 and store it
-    func fetchDataFromS3() async {
+    func FetchDataFromS3() async {
         do {
             let serviceHandler = try await ServiceHandler()
             let bucketName = "gnomyleaderboardbucket"
@@ -168,7 +222,7 @@ extension NSManagedObjectContext {
 
             let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
 
-            if let jsonString = String(data: fileData, encoding: .utf8) {
+            if String(data: fileData, encoding: .utf8) != nil {
 //                print("Received JSON: \(jsonString)")
 //                print("\n")
 
@@ -233,7 +287,7 @@ extension NSManagedObjectContext {
         } catch {
             print("Error updating file: \(error)")
         }
-        await fetchDataFromS3()
+        await FetchDataFromS3()
     }
     
     

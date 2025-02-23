@@ -3,5 +3,6 @@
     <entity name="Score" representedClassName="Score" syncable="YES">
         <attribute name="globalHighScore" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" preserveAfterDeletion="YES"/>
         <attribute name="localHighScore" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" preserveAfterDeletion="YES"/>
+        <attribute name="username" attributeType="String" defaultValueString=""/>
     </entity>
 </model>

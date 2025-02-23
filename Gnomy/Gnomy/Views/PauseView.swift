@@ -18,11 +18,11 @@ struct PauseView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", color: .white)
                 Text("\n")
-                SharedText(fontSize: 20, text: "Your High Score: \(viewModel.highScore)", fontStyle: .title, color: .white)
+                SharedText(fontSize: 20, text: "Your High Score: \(viewModel.highScore)", color: .white)
                 Text("\n")
-                SharedText(fontSize: 24, text: "Master Volume", fontStyle: .title, color: .white)
+                SharedText(fontSize: 24, text: "Master Volume", color: .white)
                 Slider(
                     value: $volumeValue,
                     in: 0...1,

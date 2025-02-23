@@ -18,6 +18,7 @@ extension Score {
 
     @NSManaged public var localHighScore: Int64
     @NSManaged public var globalHighScore: Int64
+    @NSManaged public var username: String
 
 }
 
