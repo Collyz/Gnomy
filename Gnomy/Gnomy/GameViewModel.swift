@@ -37,6 +37,7 @@ extension NSManagedObjectContext {
     @Published var username: String = "Guest"
     @Published var highScore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
+    @Published var usernameError: String = ""
     @Published var players: [User] = []
     
     private var context: NSManagedObjectContext
@@ -183,16 +184,65 @@ extension NSManagedObjectContext {
     
     
     // Used only in the menu view to set the username during the first login
-    func SetUsernameFromUser(tryName: String) -> Bool {
+    func SetUsernameFromUser(tryName: String) {
+        var isEmptyName = false
+        var isDisconnected = false
+        var isUniqueName = true
         // Remove newline characters and empty spaces
         let strippedName = tryName.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if strippedName.isEmpty {
-            print("not changing default Guest username, invalid username [update the view error message]")
-            return false
+            // not changing default Guest username, invalid username
+            usernameError = "Cannot be only empty spaces!"
+            isEmptyName = true
+            return
         } else {
+            // Username isn't empty GOOD!"
+            isEmptyName = false
+        }
+        
+        if !isEmptyName && players.count > 0 {
+            // Got leaderboard conncted to internet GOOD!
+            isDisconnected = false
+        } else {
+            // DIDNT GET the leaderboard
+            usernameError = "Connect to the internet!"
+            isDisconnected = true
+            return
+        }
+        if !isEmptyName && !isDisconnected {
+            for player in players {
+                if player.name == strippedName {
+                    // Username isn't unique : (")
+                    usernameError = "The username already exists!"
+                    isUniqueName = false
+                    return
+                }
+            }
+        }
+        
+        if isUniqueName && !isEmptyName && !isDisconnected {
+            // username is unique GOOD!
+            print("adding the username, it is unique, nonempty, and connected to internet")
             UpdateUsername(newUsername: strippedName)
+            usernameError = ""
+            
+        } else {
+            print("something failed")
+            username = "Guest"
+        }
+    }
+    
+    func CheckExistingUsername(tryUsername: String) -> Bool {
+        if players.count > 0 && tryUsername.trimmingCharacters(in: .whitespacesAndNewlines) != "" {
+            for player in players {
+                if player.name == tryUsername {
+                    return false
+                }
+            }
             return true
+        } else {
+            return false
         }
     }
 
