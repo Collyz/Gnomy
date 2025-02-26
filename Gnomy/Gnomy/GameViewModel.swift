@@ -104,7 +104,6 @@ extension NSManagedObjectContext {
         
     }
     
-    
     func FetchUsername() {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
@@ -130,23 +129,31 @@ extension NSManagedObjectContext {
     }
     
     // Update the username stored locally as well as updating S3 json if the username exists
-    func UpdateUsername(newUsername: String) {
+    func UpdateUsername(newUsername: String) async {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
             let request = try context.fetch(fetchRequest)
-            // The username exists, meaning we need to update the s
+            
+            // The username exists, meaning we need to update the S3 JSON
             if !CheckExistingUsername(tryUsername: newUsername) {
                 if let data = request.first {
-                    data.username = newUsername
-                    try context.save()
-                    self.username = newUsername
+                    // Before we update, update the S3 with the new username
+                    let canUpdate = await updateS3Username(newUsername: newUsername)
+                    
+                    if canUpdate {
+                        data.username = newUsername
+                        try context.save()
+                        self.username = newUsername
+                    } else {
+                        print("Cannot save the username")
+                    }
                 }
             }
-            
         } catch {
             print("Error updating username: \(error)")
         }
     }
+
     
     
     // Used only in the menu view to set the username during the first login
@@ -190,7 +197,9 @@ extension NSManagedObjectContext {
         if isUniqueName && !isEmptyName && !isDisconnected {
             // username is unique GOOD!
             print("adding the username, it is unique, nonempty, and connected to internet")
-            UpdateUsername(newUsername: strippedName)
+            Task {
+                await UpdateUsername(newUsername: strippedName)
+            }
             usernameError = ""
             
         } else {
@@ -293,7 +302,6 @@ extension NSManagedObjectContext {
                 }
                 json["players"] = JSON(players) // Set the updated players array
             }
-
             // Step 4: Convert the updated JSON back to Data
             let updatedData = try json.rawData()
             // Step 5: Upload the updated file to S3
@@ -305,6 +313,43 @@ extension NSManagedObjectContext {
         await FetchDataFromS3()
     }
     
-    
+    func updateS3Username(newUsername: String) async -> Bool{
+        var result: Bool = false
+        do {
+            let serviceHandler = try await ServiceHandler() // Initializing the service handler
+            let bucketName = "gnomyleaderboardbucket"
+            let fileName = "data.json"
+            // Reading the file first
+            let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
+            // Parse into a json object
+            var jsonData = try JSON(data: fileData)
+            var usernameExists: Bool = false
+            // Loop through the data read from s3 and if the username exists, replace it with the new username
+            if var playerData = jsonData["players"].array {
+                for i in 0..<playerData.count {
+                    if playerData[i]["name"].string == username {
+                        usernameExists = true
+                        playerData[i]["name"] = JSON(newUsername)
+                    }
+                }
+                // After checking if the username exists, if it doesn't, add it
+                if !usernameExists {
+                    print("the username doesn't exist, adding username")
+                    playerData.append(["name": newUsername, "highscore": highScore])
+                }
+                jsonData["players"] = JSON(playerData) // Set the updated players data
+            }
+            // Converted the JSON back to data for s3
+            let updatedData = try jsonData.rawData()
+            // Uploading the updated file to s3
+            try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
+            print("Username updated successfully.")
+            result = true
+            return result
+        } catch {
+            print("Error updating username: \(error)")
+        }
+        return result
+    }
     
 }
