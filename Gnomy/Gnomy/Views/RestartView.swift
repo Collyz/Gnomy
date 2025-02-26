@@ -24,7 +24,7 @@ struct RestartView: View {
                 Text("\n")
                 SharedText(fontSize: 24, text: "Score: \(controller.currScore())", color: .white)
                 Text("\n")
-                SomeButton("Restart", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
+                SomeButton("Restart", backgroundColor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onRestart()
                     }

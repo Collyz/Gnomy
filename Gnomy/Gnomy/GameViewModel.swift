@@ -43,13 +43,15 @@ extension NSManagedObjectContext {
     private var context: NSManagedObjectContext
 
     init(context: NSManagedObjectContext) {
+        // Set context for coredata
         self.context = context
+        // Get the username stored
         FetchUsername()
+        // Get the high score stored
         FetchHighScore()
-        FetchDeviceGlobalHighScore()
+        // CHANGING
         Task {
             await FetchDataFromS3()
-            await UpdateDeviceGlobalHighScore()	
         }
     }
 
@@ -82,7 +84,7 @@ extension NSManagedObjectContext {
                 existingHighScore!.localHighScore = newScore
                 // Save the changes
                 try context.save()
-                // Updating the highScore that is shown in the views
+                // Updating the highScore that is shown in the views asynchronously
                 DispatchQueue.main.async {
                     self.highScore = existingHighScore!.localHighScore
                     print("local high score: \(self.highScore)")
@@ -95,7 +97,6 @@ extension NSManagedObjectContext {
                     }
                 }
             }
-            UpdateDeviceGlobalHighScore(newScore: newScore)
             
         } catch {
             print("Failed to update high score: \(error)")
@@ -103,48 +104,6 @@ extension NSManagedObjectContext {
         
     }
     
-    // Get the device global high score (i.e. the high score that is pulled from s3
-    func FetchDeviceGlobalHighScore() {
-        let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
-        do {
-            let scores = try context.fetch(fetchRequest)
-            if let score = scores.first {
-                globalHighScore = score.globalHighScore
-            } else {
-                let newScore = Score(context: context)
-                newScore.globalHighScore = 0
-            }
-        } catch {
-            print("Failed to fetch global high score: \(error)")
-        }
-    }
-    
-    // Update the global high score (i.e. update the s3 json file if possible)
-    func UpdateDeviceGlobalHighScore(newScore: Int64) {
-        let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
-        do {
-            let scores = try context.fetch(fetchRequest)
-            if let existingGlobalScore = scores.first, newScore > existingGlobalScore.globalHighScore {
-                existingGlobalScore.globalHighScore = newScore
-                try context.save()
-                DispatchQueue.main.async {
-                    self.globalHighScore = newScore
-                }
-            } else {
-//                print("not updating, local score higher than global score")
-            }
-        } catch {
-            print("Failed to update global high score: \(error)")
-        }
-    }
-    
-    func UpdateDeviceGlobalHighScore() async{
-        if players.count > 0 {
-            UpdateDeviceGlobalHighScore(newScore: players[0].score)
-        } else {
-            print("nothing pulled from servers")
-        }
-    }
     
     func FetchUsername() {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
@@ -156,8 +115,10 @@ extension NSManagedObjectContext {
                     print("The username is: \(data.username)")
                     self.username = data.username
                 } else {
+                    // If the username doesn't exist make it guest and force the user to change it ("Guest" username forces username change)
                     print("setting username to Guest")
                     data.username = "Guest"
+                    // Saving the username
                     try context.save()
                     // Setting the username to the default Guest username
                     self.username = data.username
@@ -168,15 +129,20 @@ extension NSManagedObjectContext {
         }
     }
     
+    // Update the username stored locally as well as updating S3 json if the username exists
     func UpdateUsername(newUsername: String) {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
             let request = try context.fetch(fetchRequest)
-            if let data = request.first {
-                data.username = newUsername
-                try context.save()
-                self.username = newUsername
+            // The username exists, meaning we need to update the s
+            if !CheckExistingUsername(tryUsername: newUsername) {
+                if let data = request.first {
+                    data.username = newUsername
+                    try context.save()
+                    self.username = newUsername
+                }
             }
+            
         } catch {
             print("Error updating username: \(error)")
         }
@@ -241,9 +207,8 @@ extension NSManagedObjectContext {
                 }
             }
             return true
-        } else {
-            return false
         }
+        return false
     }
 
     

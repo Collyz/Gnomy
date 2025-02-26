@@ -19,9 +19,9 @@ struct PauseView: View {
             VStack {
                 Spacer()
                 SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", color: .white)
-                Text("\n")
+                    .padding()
                 SharedText(fontSize: 20, text: "Your High Score: \(viewModel.highScore)", color: .white)
-                Text("\n")
+                    .padding()
                 SharedText(fontSize: 24, text: "Master Volume", color: .white)
                 Slider(
                     value: $volumeValue,
@@ -31,18 +31,28 @@ struct PauseView: View {
                     Text("Volume")
                 } minimumValueLabel: {
                     Text("0")
+                        .font(.custom("Chalkduster", size: 24))
+                        .foregroundColor(.white)
                 } maximumValueLabel: {
                     Text("100")
+                        .font(.custom("Chalkduster", size: 24))
+                        .foregroundColor(.white)
                 }
                 .padding()
                 .onChange(of: volumeValue) { _, newVal in
                     controller.setVolume(newVal)
                 }
-                Spacer()
-                SomeButton("Resume", backgroundCOlor: .bgBlue, foregroundColor: .white, borderColor: .white)
+                .padding()
+                SomeButton("Resume", backgroundColor: .bgBlue, foregroundColor: .white, borderColor: .white)
                     .onTapGesture {
                         onUnpause()
                     }
+                    .padding(.bottom, 50)
+                SomeButton("Quit to Menu", backgroundColor: .bgBlue, foregroundColor: .white, borderColor: .white)
+                    .onTapGesture {
+                        onUnpause()
+                    }
+                    .padding(.bottom, 250)
             }
             .background(
                 Image("background")

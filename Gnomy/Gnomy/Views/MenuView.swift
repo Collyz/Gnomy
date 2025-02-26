@@ -37,10 +37,11 @@ struct MenuView: View {
                 SharedText(fontSize: 25, text: "Your High Score: \(viewModel.highScore)", color: .white)
                 Spacer()
                 Text("\n")
-                SomeButton("Start!", backgroundCOlor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
+                SomeButton("Start!", backgroundColor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onStartTapped()
                 }
+                    .padding(.bottom, 150)
             } else {
                 TextField("Enter a username", text: self.$username)
                     .font(.system(size: 24)) // Increase font size
@@ -53,10 +54,10 @@ struct MenuView: View {
                         print("User pressed Enter, trying to saving username: \(self.username)")
                         viewModel.SetUsernameFromUser(tryName: self.username)
                     }
+                    
                 // Error message from viewmodel
                 SharedText(fontSize: 20, text: viewModel.usernameError, color: .white)
-                Spacer()
-                Spacer()
+                    .padding(.bottom, 300)
             }
             Spacer()
         }.background(

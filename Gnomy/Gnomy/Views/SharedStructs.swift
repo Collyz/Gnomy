@@ -10,13 +10,13 @@ import SpriteKit
 
 struct SomeButton: View {
     let buttonLabel: String
-    let backgroundCOlor: Color
+    let backgroundColor: Color
     let foregroundColor: Color
     let borderColor: Color
     
-    init(_ buttonLabel: String, backgroundCOlor: Color, foregroundColor: Color, borderColor: Color) {
+    init(_ buttonLabel: String, backgroundColor: Color, foregroundColor: Color, borderColor: Color) {
         self.buttonLabel = buttonLabel
-        self.backgroundCOlor = backgroundCOlor
+        self.backgroundColor = backgroundColor
         self.foregroundColor = foregroundColor
         self.borderColor = borderColor
     }
@@ -28,12 +28,11 @@ struct SomeButton: View {
             .padding(.horizontal, 25)
             .padding(.vertical, 0)
             .foregroundColor(foregroundColor)
-            .background(backgroundCOlor)
+            .background(backgroundColor)
             .cornerRadius(20)
             .overlay(RoundedRectangle(cornerRadius: 20)
                 .stroke(borderColor, lineWidth: 3))
             .shadow(radius: 10)
-            .padding(.bottom, 175)
     }
 }
 

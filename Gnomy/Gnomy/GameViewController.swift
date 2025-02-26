@@ -131,7 +131,6 @@ class GameViewController: UIViewController {
         let roundScore = Int64(self.currScore())
         viewModel.UpdateHighScore(newScore: roundScore)
         Task {
-            await viewModel.UpdateDeviceGlobalHighScore()
             await viewModel.UpdateS3()
         }
         if restartView == nil {
