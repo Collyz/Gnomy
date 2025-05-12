@@ -20,7 +20,7 @@ struct RestartView: View {
                 Spacer()
                 SharedText(fontSize: 24, text: "Global High Score: \(viewModel.globalHighScore)", color: .white)
                 Text("\n")
-                SharedText(fontSize: 24, text: "High Score: \(viewModel.highScore)", color: .white)
+                SharedText(fontSize: 24, text: "High Score: \(viewModel.highscore)", color: .white)
                 Text("\n")
                 SharedText(fontSize: 24, text: "Score: \(controller.currScore())", color: .white)
                 Text("\n")

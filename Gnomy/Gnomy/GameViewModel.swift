@@ -14,8 +14,8 @@ import SwiftyJSON
 
 struct User: Identifiable {
     let id = UUID()
-    let name: String
-    let score: Int64
+    var name: String
+    var score: Int64
 }
 
 
@@ -34,11 +34,11 @@ extension NSManagedObjectContext {
 }
 
 @MainActor class GameViewModel: ObservableObject {
-    @Published var username: String = "Guest"
-    @Published var highScore: Int64 = 0
+    @Published var username: String = ""
+    @Published var highscore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
     @Published var usernameError: String = ""
-    @Published var players: [User] = []
+    @Published var leaderboard: [User] = []
     
     private var context: NSManagedObjectContext
 
@@ -46,180 +46,120 @@ extension NSManagedObjectContext {
         // Set context for coredata
         self.context = context
         // Get the username stored
-        FetchUsername()
+        self.getUsername()
         // Get the high score stored
-        FetchHighScore()
-        // CHANGING
+        self.getHighScore()
+        // Get the leaderboard
         Task {
-            await FetchDataFromS3()
+            await getLeaderboard()
+            await updateUsername(oldUsername: "NewTestUseradfasdfasfd", newUsername: "TestUser")
         }
     }
-
-    // Get the local high score if it exists, otherwise create it and assign a value of zero
-    func FetchHighScore() {
+    
+    // Gets the device highscore
+    func getHighScore() {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
-            let scores = try context.fetch(fetchRequest)
-            if let score = scores.first {
-                highScore = score.localHighScore
+            let data = try context.fetch(fetchRequest)
+            if let score = data.first {
+                self.highscore = score.highscore
             } else {
                 let newScore = Score(context: context)
-                newScore.localHighScore = 0
+                newScore.highscore = 0
+                self.highscore = newScore.highscore
                 try context.save()
-                highScore = newScore.localHighScore
             }
         } catch {
-            print("Failed to fetch local high score: \(error)")
+            print("Failed to fetch device high score: \(error)")
         }
-    }
-
-    // Update the local high score with the new value (should be the updated curr score from the game)
-    func UpdateHighScore(newScore: Int64) {
-        let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
-        do {
-            let scores = try context.fetch(fetchRequest)
-            let existingHighScore = scores.first
-            if newScore > existingHighScore!.localHighScore {
-                // Apply the new score if it is bigger than the stored score
-                existingHighScore!.localHighScore = newScore
-                // Save the changes
-                try context.save()
-                // Updating the highScore that is shown in the views asynchronously
-                DispatchQueue.main.async {
-                    self.highScore = existingHighScore!.localHighScore
-                    print("local high score: \(self.highScore)")
-                }
-                // Update the s3 score since your new score is better than the one stored in the cloud
-                DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(0.5)) {
-                    Task {
-                        print("UPDATING S3 SCORE")
-                        await self.UpdateS3()
-                    }
-                }
-            }
-            
-        } catch {
-            print("Failed to update high score: \(error)")
-        }
-        
     }
     
-    func FetchUsername() {
+    func updateHighScore(newScore: Int64) {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
-            let request = try context.fetch(fetchRequest)
-            if let data = request.first {
-                if data.username != "Guest" {
-                    // If the username already exists, just grab it
-                    print("The username is: \(data.username)")
-                    self.username = data.username
-                } else {
-                    // If the username doesn't exist make it guest and force the user to change it ("Guest" username forces username change)
-                    print("setting username to Guest")
-                    data.username = "Guest"
-                    // Saving the username
+            let data = try context.fetch(fetchRequest)
+            if let userData = data.first {
+                if newScore > userData.highscore {
+                    userData.highscore = newScore
+                    self.highscore = userData.highscore
                     try context.save()
-                    // Setting the username to the default Guest username
-                    self.username = data.username
+                }
+                Task {
+                    await updateScore()
                 }
             }
         } catch {
-            print("Failed to find username: \(error)")
+            print("Failed to update device high score: \(error)")
         }
     }
     
-    // Update the username stored locally as well as updating S3 json if the username exists
-    func UpdateUsername(newUsername: String) async {
+    func getUsername() {
         let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
         do {
-            let request = try context.fetch(fetchRequest)
-            
-            // The username exists, meaning we need to update the S3 JSON
-            if !CheckExistingUsername(tryUsername: newUsername) {
-                if let data = request.first {
-                    // Before we update, update the S3 with the new username
-                    let canUpdate = await updateS3Username(newUsername: newUsername)
-                    
-                    if canUpdate {
-                        data.username = newUsername
-                        try context.save()
-                        self.username = newUsername
-                    } else {
-                        print("Cannot save the username")
-                    }
-                }
+            let data = try context.fetch(fetchRequest)
+            if let userData = data.first {
+                print("got username: \(userData.username)")
+                self.username = userData.username
+            } else {
+                print("username doesn't exist, making default 'Guest'")
+                let updatedData = Score(context: context)
+                updatedData.username = "Guest"
+                self.username = updatedData.username
+                try context.save()
             }
         } catch {
-            print("Error updating username: \(error)")
+            print("Failed to fetch username: \(error)")
         }
     }
-
     
-    
-    // Used only in the menu view to set the username during the first login
-    func SetUsernameFromUser(tryName: String) {
-        var isEmptyName = false
-        var isDisconnected = false
-        var isUniqueName = true
-        // Remove newline characters and empty spaces
-        let strippedName = tryName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if strippedName.isEmpty {
-            // not changing default Guest username, invalid username
-            usernameError = "Cannot be only empty spaces!"
-            isEmptyName = true
-            return
-        } else {
-            // Username isn't empty GOOD!"
-            isEmptyName = false
-        }
-        
-        if !isEmptyName && players.count > 0 {
-            // Got leaderboard conncted to internet GOOD!
-            isDisconnected = false
-        } else {
-            // DIDNT GET the leaderboard
-            usernameError = "Connect to the internet!"
-            isDisconnected = true
-            return
-        }
-        if !isEmptyName && !isDisconnected {
-            for player in players {
-                if player.name == strippedName {
-                    // Username isn't unique : (")
-                    usernameError = "The username already exists!"
-                    isUniqueName = false
-                    return
+    func setUsername(newUsername: String) {
+        let fetchRequest: NSFetchRequest<Score> = Score.createFetchRequest()
+        do {
+            let data = try context.fetch(fetchRequest)
+            if let userData = data.first {
+                print("attempting to add username starting point")
+                if leaderboard.count > 0 {
+                    var editIndex = 0
+                    for i in 0...leaderboard.count - 1 {
+                        if leaderboard[i].name == self.username {
+                            editIndex = i
+                            break
+                        }
+                    }
+                    if leaderboard[editIndex].name == self.username	&& leaderboard[editIndex].name == userData.username{
+                        Task {
+                            await updateUsername(oldUsername: self.username, newUsername: newUsername)
+                        }
+                        userData.username = newUsername
+                        self.username = newUsername
+                        leaderboard[editIndex].name = newUsername
+                        try context.save()
+                        Task {
+                            await getLeaderboard()
+                        }
+                    } else {
+                        print("Updating username, not found in self and leaderboard")
+                        userData.username = newUsername
+                        self.username = newUsername
+                        try context.save()
+                        
+                        // Appending the new username and highscore to the leaderboard and then calling the s3 leaderboard update func
+                        leaderboard.append(User(name: newUsername, score: self.highscore))
+                        Task {
+                            await insertNewPlayer()
+                            await getLeaderboard()
+                        }
+                    }
+                } else {
+                    print("Please connect to the internet to connect to the server")
                 }
+            } else {
+                print("username doesn't exist .~.")
             }
-        }
-        
-        if isUniqueName && !isEmptyName && !isDisconnected {
-            // username is unique GOOD!
-            print("adding the username, it is unique, nonempty, and connected to internet")
-            Task {
-                await UpdateUsername(newUsername: strippedName)
-            }
-            usernameError = ""
-            
-        } else {
-            print("something failed")
-            username = "Guest"
+        } catch {
+            print("Failed to update username: \(error)")
         }
     }
-    
-    func CheckExistingUsername(tryUsername: String) -> Bool {
-        if players.count > 0 && tryUsername.trimmingCharacters(in: .whitespacesAndNewlines) != "" {
-            for player in players {
-                if player.name == tryUsername {
-                    return false
-                }
-            }
-            return true
-        }
-        return false
-    }
-
     
     // Test the s3 connection
     func TestS3Connection() async {
@@ -236,23 +176,17 @@ extension NSManagedObjectContext {
         }
     }
     
-    // Function to fetch data from S3 and print it
-    // Fetch player data from S3 and store it
-    func FetchDataFromS3() async {
+    func getLeaderboard() async {
         do {
             let serviceHandler = try await ServiceHandler()
             let bucketName = "gnomyleaderboardbucket"
             let fileName = "data.json"
-
+            
             let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
-
+            
             if String(data: fileData, encoding: .utf8) != nil {
-//                print("Received JSON: \(jsonString)")
-//                print("\n")
-
                 let json = try JSON(data: fileData)
                 var tempPlayers: [User] = []
-
                 if let playersArray = json["players"].array {
                     for player in playersArray {
                         if let name = player["name"].string, let highscore = player["highscore"].int64 {
@@ -262,94 +196,247 @@ extension NSManagedObjectContext {
                 } else {
                     print("No players found in the JSON.")
                 }
-                // Sorting and storing the player information
-                self.players = tempPlayers.sorted { $0.score > $1.score }
+                // Sorting the players
+                self.leaderboard = tempPlayers.sorted { $0.score > $1.score }
+                if leaderboard.count > 0 {
+                    globalHighScore = leaderboard[0].score
+                    print("set the global player high score \n")
+                }
             } else {
-                print("Failed to convert data to string.")
+                print("Failed to convert data to string")
             }
-        } catch {
-            print("Failed to fetch data from S3: \(error)")
-        }
-    }
-    
-    func UpdateS3() async {
-        do {
-            let serviceHandler = try await ServiceHandler() // Initialize the service handler
-            let bucketName = "gnomyleaderboardbucket"
-            let fileName = "data.json"
-
-            // Step 1: Read the current file from S3
-            let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
-//            print("read data: \(fileData)")
-            // Step 2: Parse the existing JSON
-            var json = try JSON(data: fileData)
             
-            // Step 3: Update the data (e.g., add or update a player's highscore)
-            var updated = false
-            if var players = json["players"].array {
-                for i in 0..<players.count {
-                    if players[i]["name"].string == UIDevice.current.name {
-                        if players[i]["highscore"].int64Value < highScore {
-                            players[i]["highscore"] = JSON(highScore) // Update the players highscore
+        } catch {
+            print("Failed to fetch leaderboard data from S3: \(error)")
+        }
+    }
+    
+    func insertNewPlayer() async {
+        if leaderboard.count > 0 {
+            do {
+                let serviceHandler = try await ServiceHandler()
+                let bucketName = "gnomyleaderboardbucket"
+                let fileName = "data.json"
+                
+                let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
+                
+                if String(data: fileData, encoding: .utf8) != nil {
+                    var json = try JSON(data: fileData)
+                    // Adding the last value in the leaderboard array
+                    if var players = json["players"].array {
+                        players.append(["name": leaderboard[leaderboard.count - 1].name, "highscore": leaderboard[leaderboard.count - 1].score])
+                        json["players"] = JSON(players) // Set the updated players array
+                    }
+                    // Step 4: Convert the updated JSON back to Data
+                    let updatedData = try json.rawData()
+                    // Step 5: Upload the updated file to S3
+                    try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
+//                    print("File updated successfully.")
+                }
+                
+            } catch {
+                print("Failed to fetch leaderboard data from S3: \(error)")
+            }
+        }
+    }
+    
+    func updateUsername(oldUsername: String, newUsername: String) async {
+        if leaderboard.count > 0 {
+            do {
+                let serviceHandler = try await ServiceHandler()
+                let bucketName = "gnomyleaderboardbucket"
+                let fileName = "data.json"
+                
+                let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
+                
+                if String(data: fileData, encoding: .utf8) != nil {
+                    var json = try JSON(data: fileData)
+                    // updating just the username
+                    if var players = json["players"].array {
+                        for i in 0..<players.count {
+                            if players[i]["name"].string == oldUsername {
+                                players[i]["name"] = JSON(newUsername)
+                                break
+                            }
                         }
-                        updated = true
-                        break
+                        
+                        json["players"] = JSON(players) // Set the updated players array
                     }
+                    // Step 4: Convert the updated JSON back to Data
+                    let updatedData = try json.rawData()
+                
+                    // Step 5: Upload the updated file to S3
+                    try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
+//                    print("File updated successfully.")
                 }
-                // If phone_name wasn't found, add it
-                if !updated {
-                    players.append(["name": UIDevice.current.name, "highscore": highScore])
-                }
-                json["players"] = JSON(players) // Set the updated players array
+                
+                
+            } catch {
+                print("Failed to fetch leaderboard data from S3: \(error)")
             }
-            // Step 4: Convert the updated JSON back to Data
-            let updatedData = try json.rawData()
-            // Step 5: Upload the updated file to S3
-            try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
-            print("File updated successfully.")
-        } catch {
-            print("Error updating file: \(error)")
         }
-        await FetchDataFromS3()
     }
     
-    func updateS3Username(newUsername: String) async -> Bool{
-        var result: Bool = false
-        do {
-            let serviceHandler = try await ServiceHandler() // Initializing the service handler
-            let bucketName = "gnomyleaderboardbucket"
-            let fileName = "data.json"
-            // Reading the file first
-            let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
-            // Parse into a json object
-            var jsonData = try JSON(data: fileData)
-            var usernameExists: Bool = false
-            // Loop through the data read from s3 and if the username exists, replace it with the new username
-            if var playerData = jsonData["players"].array {
-                for i in 0..<playerData.count {
-                    if playerData[i]["name"].string == username {
-                        usernameExists = true
-                        playerData[i]["name"] = JSON(newUsername)
+    func updateScore() async {
+        self.getHighScore()
+        if leaderboard.count > 0 {
+            do {
+                let serviceHandler = try await ServiceHandler()
+                let bucketName = "gnomyleaderboardbucket"
+                let fileName = "data.json"
+                
+                let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
+                
+                if String(data: fileData, encoding: .utf8) != nil {
+                    var json = try JSON(data: fileData)
+                    // updating just the username
+                    if var players = json["players"].array {
+                        for i in 0..<players.count {
+                            if players[i]["name"].string == self.username {
+                                players[i]["highscore"] = JSON(self.highscore)
+                                break
+                            }
+                        }
+                        
+                        json["players"] = JSON(players) // Set the updated players array
                     }
+                    // Step 4: Convert the updated JSON back to Data
+                    let updatedData = try json.rawData()
+                
+                    // Step 5: Upload the updated file to S3
+                    try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
+//                    print("File updated successfully.")
                 }
-                // After checking if the username exists, if it doesn't, add it
-                if !usernameExists {
-                    print("the username doesn't exist, adding username")
-                    playerData.append(["name": newUsername, "highscore": highScore])
-                }
-                jsonData["players"] = JSON(playerData) // Set the updated players data
+                
+            } catch {
+                print("Failed to fetch leaderboard data from S3: \(error)")
             }
-            // Converted the JSON back to data for s3
-            let updatedData = try jsonData.rawData()
-            // Uploading the updated file to s3
-            try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
-            print("Username updated successfully.")
-            result = true
-            return result
-        } catch {
-            print("Error updating username: \(error)")
+            Task {
+                await getLeaderboard()
+            }
         }
-        return result
     }
     
+//
+//    // Fetch player data from S3 and store it
+//    func FetchDataFromS3() async {
+//        do {
+//            let serviceHandler = try await ServiceHandler()
+//            let bucketName = "gnomyleaderboardbucket"
+//            let fileName = "data.json"
+//
+//            let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
+//
+//            if String(data: fileData, encoding: .utf8) != nil {
+////                print("Received JSON: \(jsonString)")
+////                print("\n")
+//
+//                let json = try JSON(data: fileData)
+//                var tempPlayers: [User] = []
+//
+//                if let playersArray = json["players"].array {
+//                    for player in playersArray {
+//                        if let name = player["name"].string, let highscore = player["highscore"].int64 {
+//                            tempPlayers.append(User(name: name, score: highscore))
+//                        }
+//                    }
+//                } else {
+//                    print("No players found in the JSON.")
+//                }
+//                // Sorting and storing the player information
+//                self.players = tempPlayers.sorted { $0.score > $1.score }
+//                print(players)
+//                print("\n")
+//                if players.count > 0 {
+//                    globalHighScore = players[0].score
+//                    print("set the gloabl player high score \n")
+//                }
+//            } else {
+//                print("Failed to convert data to string.")
+//            }
+//        } catch {
+//            print("Failed to fetch data from S3: \(error)")
+//        }
+//    }
+//    
+//    func UpdateS3() async {
+//        do {
+//            let serviceHandler = try await ServiceHandler() // Initialize the service handler
+//            let bucketName = "gnomyleaderboardbucket"
+//            let fileName = "data.json"
+//
+//            // Step 1: Read the current file from S3
+//            let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
+////            print("read data: \(fileData)")
+//            // Step 2: Parse the existing JSON
+//            var json = try JSON(data: fileData)
+//            
+//            // Step 3: Update the data (e.g., add or update a player's highscore)
+//            var updated = false
+//            if var players = json["players"].array {
+//                for i in 0..<players.count {
+//                    if players[i]["name"].string == UIDevice.current.name {
+//                        if players[i]["highscore"].int64Value < highScore {
+//                            players[i]["highscore"] = JSON(highScore) // Update the players highscore
+//                        }
+//                        updated = true
+//                        break
+//                    }
+//                }
+//                // If phone_name wasn't found, add it
+//                if !updated {
+//                    players.append(["name": UIDevice.current.name, "highscore": highScore])
+//                }
+//                json["players"] = JSON(players) // Set the updated players array
+//            }
+//            // Step 4: Convert the updated JSON back to Data
+//            let updatedData = try json.rawData()
+//            // Step 5: Upload the updated file to S3
+//            try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
+//            print("File updated successfully.")
+//        } catch {
+//            print("Error updating file: \(error)")
+//        }
+//        await FetchDataFromS3()
+//    }
+//    
+//    func updateS3Username(newUsername: String) async -> Bool{
+//        var result: Bool = false
+//        do {
+//            let serviceHandler = try await ServiceHandler() // Initializing the service handler
+//            let bucketName = "gnomyleaderboardbucket"
+//            let fileName = "data.json"
+//            // Reading the file first
+//            let fileData = try await serviceHandler.readFile(bucket: bucketName, key: fileName)
+//            // Parse into a json object
+//            var jsonData = try JSON(data: fileData)
+//            var usernameExists: Bool = false
+//            // Loop through the data read from s3 and if the username exists, replace it with the new username
+//            if var playerData = jsonData["players"].array {
+//                for i in 0..<playerData.count {
+//                    if playerData[i]["name"].string == username {
+//                        usernameExists = true
+//                        playerData[i]["name"] = JSON(newUsername)
+//                    }
+//                }
+//                // After checking if the username exists, if it doesn't, add it
+//                if !usernameExists {
+//                    print("the username doesn't exist, adding username")
+//                    playerData.append(["name": newUsername, "highscore": highScore])
+//                }
+//                jsonData["players"] = JSON(playerData) // Set the updated players data
+//            }
+//            // Converted the JSON back to data for s3
+//            let updatedData = try jsonData.rawData()
+//            // Uploading the updated file to s3
+//            try await serviceHandler.createFile(bucket: bucketName, key: fileName, withData: updatedData)
+//            print("Username updated successfully.")
+//            result = true
+//            return result
+//        } catch {
+//            print("Error updating username: \(error)")
+//        }
+//        return result
+//    }
+//    
 }

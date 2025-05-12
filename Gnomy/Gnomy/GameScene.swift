@@ -36,9 +36,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var baseFloorSize: CGSize?
     private var spawnMoveBlock: Bool = false
     private var totalBlocks: Int = 0
-    
+
     // Player
-    private let player = Player(fileName: "player", position: CGPoint(x: 0, y: 0))
+    private let player = Player(fileName: "player", position: CGPoint(x: 0, y: -5))
     
     // Nonplayer nodes
     private let cam = SKCameraNode()
@@ -61,6 +61,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.isPaused = true
         // Set up the scene and player
         addChild(player)
+        player.playIdleAnimation()
+        
         physicsWorld.gravity = CGVector(dx: 0, dy: -4)
         physicsWorld.contactDelegate = self
         
@@ -97,6 +99,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player.removeAllChildren()
             player.jump()
             firstTap = true
+            // turn off idle animation
+            player.stopIdleAnimation()
         }
         
         touchOffset = nil
@@ -373,6 +377,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // TODO: - Proper reset: RESETS score, camera, player, regenerates platforms, [recyle pause, scorelabelnode and background?]
     func resetGame() {
+        firstTap = false
         scoreUpdate(false)
         for block in blocks {
             block.removeFromParent()
@@ -384,16 +389,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         blocks.removeAll()
         platformY = 210
-        player.resignFirstResponder()
+        player.removeFromParent()
+        
         player.addStartPlatform(size: player.size)
         cam.position = CGPoint(x: 0, y: 400)
         player.position = CGPoint(x: 0,
                                   y: (-(baseFloorSize!.height / 2)) + (player.size.height)
                                   + player.size.height + 10)
         addChild(player)
-        firstTap = false
         
-        resumeGame()
     }
 
 

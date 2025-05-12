@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "Gnomy_idle12.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

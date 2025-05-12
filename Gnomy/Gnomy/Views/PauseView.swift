@@ -13,6 +13,7 @@ struct PauseView: View {
     @State var controller: GameViewController
     @Binding var volumeValue: Float
     var onUnpause: () -> Void
+    var quitToMenu: () -> Void
 
     var body: some View {
         NavigationStack {
@@ -20,7 +21,7 @@ struct PauseView: View {
                 Spacer()
                 SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", color: .white)
                     .padding()
-                SharedText(fontSize: 20, text: "Your High Score: \(viewModel.highScore)", color: .white)
+                SharedText(fontSize: 20, text: "Your High Score: \(viewModel.highscore)", color: .white)
                     .padding()
                 SharedText(fontSize: 24, text: "Master Volume", color: .white)
                 Slider(
@@ -50,7 +51,7 @@ struct PauseView: View {
                     .padding(.bottom, 50)
                 SomeButton("Quit to Menu", backgroundColor: .bgBlue, foregroundColor: .white, borderColor: .white)
                     .onTapGesture {
-                        onUnpause()
+                        quitToMenu()
                     }
                     .padding(.bottom, 250)
             }
@@ -70,5 +71,5 @@ struct PauseView: View {
     
     PauseView(viewModel: previewViewModel,
               controller: GameViewController(),
-              volumeValue: $previewVolumeValue) {}
+              volumeValue: $previewVolumeValue) {} quitToMenu: {}
 }

@@ -10,17 +10,23 @@ import SpriteKit
 class Player: SKSpriteNode {
     private let moveSpeed: CGFloat = 3;
     private var feetHitBox: SKSpriteNode!
+    private var idle_animation: SKAction
     
     
     init(fileName: String, position: CGPoint = CGPoint.zero) {
         let size = CGSize(width: 64, height: 64)
         let texture = SKTexture(imageNamed: fileName)
-        super.init(texture: texture, color: .clear, size: size)
+        // Idle animation
+        var animationTextures: [SKTexture] = []
+        animationTextures.append(SKTexture(imageNamed: "idle_animation_\(1)"))
+        animationTextures.append(SKTexture(imageNamed: "idle_animation_\(2)"))
+        idle_animation = SKAction.animate(with: animationTextures, timePerFrame: 0.4)
         
+        super.init(texture: texture, color: .clear, size: size)
         self.name = "player"
         self.position = position
         self.zPosition = 2
-    
+        
         // Add physics
         self.physicsBody = SKPhysicsBody(rectangleOf: size)
         self.physicsBody?.isDynamic = true
@@ -94,12 +100,19 @@ class Player: SKSpriteNode {
     func springJump() {
         guard let velocity = self.physicsBody?.velocity else { return }
         self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 0) // Reset vertical velocity
-        self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 3000) // Reset vertical velocity
+        self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 3000) // Set spring vertical velocity
     }
     
     func stopMovement() {
         self.physicsBody?.velocity = CGVector(dx: 0, dy: (self.physicsBody?.velocity.dy)!)
-        
+    }
+    
+    func playIdleAnimation() {
+        self.run(SKAction.repeatForever(idle_animation), withKey: "idle")
+    }
+    
+    func stopIdleAnimation() {
+        self.removeAction(forKey: "idle")
     }
 
 }

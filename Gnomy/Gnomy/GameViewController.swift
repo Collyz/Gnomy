@@ -108,8 +108,9 @@ class GameViewController: UIViewController {
                         self.currentVolume = newValue
                         self.musicPlayer?.setVolume(newValue)
                     }
-                ),
-                onUnpause: { self.resumeGame() }
+                ), onUnpause: { self.resumeGame() }
+                
+                , quitToMenu: { self.quitToMenu() }
             )
         }
         showSwiftUIView(pauseMenu)
@@ -129,10 +130,7 @@ class GameViewController: UIViewController {
     // Updates the high score and global score
     func lossGame() {
         let roundScore = Int64(self.currScore())
-        viewModel.UpdateHighScore(newScore: roundScore)
-        Task {
-            await viewModel.UpdateS3()
-        }
+        viewModel.updateHighScore(newScore: roundScore)
         if restartView == nil {
             restartView = RestartView(
                 viewModel: self.viewModel,
@@ -151,8 +149,17 @@ class GameViewController: UIViewController {
                 self.view.addSubview(skView)
             }
             gameScene?.resetGame()
+            gameScene?.resumeGame()
         }
         musicPlayer?.playBgMusic()
+    }
+    
+    func quitToMenu() {
+        let roundScore = Int64(self.currScore())
+        viewModel.updateHighScore(newScore: roundScore)
+        musicPlayer?.pauseBgMusic()
+        gameScene?.resetGame()
+        showSwiftUIView(currMenu)
     }
 
     // Helper fucntion to show a new SwiftUI view

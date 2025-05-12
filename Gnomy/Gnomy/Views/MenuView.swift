@@ -21,20 +21,20 @@ struct MenuView: View {
             if viewModel.username != "Guest" {
                 Spacer()
                 Spacer()
-                if viewModel.highScore == 0 {
-                    SharedText(fontSize: 30, text: "Welcome \(viewModel.username)!", color: .white)
+                if viewModel.highscore == 0 {
+                    SharedText(fontSize: 30, text: "Welcome \n \(viewModel.username)!", color: .white)
                         .padding(.bottom, 10)
                 } else {
-                    SharedText(fontSize: 30, text: "Welcome back, \(viewModel.username)!", color: .white)
+                    SharedText(fontSize: 30, text: "Welcome back, \n \(viewModel.username)!", color: .white)
                         .padding(.bottom, 10)
                 }
                 SharedText(fontSize: 20, text: "Top Scores!", color: .white)
                     .underline().offset(y: -5)
-                ForEach(viewModel.players.prefix(3)) { player in
+                ForEach(viewModel.leaderboard.prefix(3)) { player in
                     SharedText(fontSize: 20, text: "\(player.name): \(player.score)", color: .white)
                 }
                 Text("\n")
-                SharedText(fontSize: 25, text: "Your High Score: \(viewModel.highScore)", color: .white)
+                SharedText(fontSize: 25, text: "Your High Score: \(viewModel.highscore)", color: .white)
                 Spacer()
                 Text("\n")
                 SomeButton("Start!", backgroundColor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
@@ -52,7 +52,7 @@ struct MenuView: View {
                     .frame(width: 300)
                     .onSubmit {
                         print("User pressed Enter, trying to saving username: \(self.username)")
-                        viewModel.SetUsernameFromUser(tryName: self.username)
+                        viewModel.setUsername(newUsername: self.username)
                     }
                     
                 // Error message from viewmodel
