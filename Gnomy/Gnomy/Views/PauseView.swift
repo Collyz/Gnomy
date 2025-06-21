@@ -12,7 +12,6 @@ struct PauseView: View {
     @StateObject private var playerInfoStack = PlayerInfoStack.shared
     @ObservedObject var viewModel: GameViewModel
     @State var controller: GameViewController
-    @State var localScore: Int64 = 0
     @Binding var volumeValue: Float
     var onUnpause: () -> Void
     var quitToMenu: () -> Void
