@@ -5,13 +5,7 @@
 //  Created by Mohammed Mowla on 2/20/25.
 //
 
-import SwiftUI
-import SwiftData
-import Combine
 import CoreData
-import AWSS3
-import ClientRuntime
-import SwiftyJSON
 
 struct User: Identifiable {
     let id = UUID()

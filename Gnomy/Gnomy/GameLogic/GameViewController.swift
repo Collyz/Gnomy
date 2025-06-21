@@ -39,7 +39,7 @@ class GameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Core Data Setup
-        container = NSPersistentContainer(name: "HighScore")
+        container = NSPersistentContainer(name: "PlayerInfo")
         container.loadPersistentStores { _, error in
             if let error = error {
                 print("Unresolved error \(error)")
