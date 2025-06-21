@@ -27,6 +27,50 @@ class PlayerInfoStack: ObservableObject {
         return container
     }()
     
+    // Returns the current players information, if it doesn't exist default values are createds
+    public func fetchPlayerInfo() -> PlayerInfo {
+        let context = persistentContainer.viewContext
+        let request: NSFetchRequest<PlayerInfo> = PlayerInfo.fetchRequest()
+        
+        do {
+            if let existingPlayer = try context.fetch(request).first {
+                return existingPlayer
+            } else {
+                let newPlayer = PlayerInfo(context: context)
+                newPlayer.username = "Guest"
+                newPlayer.score = 0
+                try context.save()
+                return newPlayer
+            }
+        } catch {
+            fatalError("Failed to fetch or create PlayerInfo: \(error)")
+        }
+    }
+    
+    // Saves a new input username
+    public func saveUsername(_ newUsername: String) {
+        guard !newUsername.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        
+        let context = persistentContainer.viewContext
+        let request: NSFetchRequest<PlayerInfo> = PlayerInfo.fetchRequest()
+        
+        do {
+            if let existingPlayer = try context.fetch(request).first {
+                existingPlayer.username = newUsername
+            } else {
+                let newPlayer = PlayerInfo(context: context)
+                newPlayer.username = newUsername
+                newPlayer.score = 0
+            }
+
+            try context.save()
+            
+        } catch {
+            print("Failed to save player username: \(error)")
+        }
+    }
+
+    
     public func save() {
         guard persistentContainer.viewContext.hasChanges else { return }
         
@@ -38,10 +82,7 @@ class PlayerInfoStack: ObservableObject {
             print("Failed to save the context: \(error.localizedDescription)")
         }
     }
-
-    public func changeUsername(_ newUsername: String) {
-        
-    }
+    
         
     private init() { }
     
