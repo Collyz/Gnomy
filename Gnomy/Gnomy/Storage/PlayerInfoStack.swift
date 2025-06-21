@@ -14,7 +14,7 @@ class PlayerInfoStack: ObservableObject {
     lazy var persistentContainer: NSPersistentContainer = {
         
         // Pass the data model filename to the container’s initializer.
-        let container = NSPersistentContainer(name: "DataModel")
+        let container = NSPersistentContainer(name: "PlayerData")
         
         // Load any persistent stores, which creates a store if none exists.
         container.loadPersistentStores { _, error in
@@ -37,7 +37,7 @@ class PlayerInfoStack: ObservableObject {
                 return existingPlayer
             } else {
                 let newPlayer = PlayerInfo(context: context)
-                newPlayer.username = "Guest"
+                newPlayer.username = ""
                 newPlayer.score = 0
                 try context.save()
                 return newPlayer
@@ -48,8 +48,8 @@ class PlayerInfoStack: ObservableObject {
     }
     
     // Saves a new input username
-    public func saveUsername(_ newUsername: String) {
-        guard !newUsername.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+    public func saveUsername(_ newUsername: String) -> Bool{
+        guard !newUsername.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
         
         let context = persistentContainer.viewContext
         let request: NSFetchRequest<PlayerInfo> = PlayerInfo.fetchRequest()
@@ -64,10 +64,36 @@ class PlayerInfoStack: ObservableObject {
             }
 
             try context.save()
-            
+
         } catch {
             print("Failed to save player username: \(error)")
         }
+        return true
+    }
+    
+    public func saveScore(_ newScore: Int64) -> Bool {
+        guard newScore >= 0 else { return false }
+        
+        let context = persistentContainer.viewContext
+        let request: NSFetchRequest<PlayerInfo> = PlayerInfo.fetchRequest()
+        
+        do {
+            if let existingPlayer = try context.fetch(request).first {
+                if existingPlayer.score < newScore {
+                    existingPlayer.score = newScore
+                }
+            } else {
+                let newPlayer = PlayerInfo(context: context)
+                newPlayer.username = ""
+                newPlayer.score = newScore
+            }
+            
+            try context.save()
+            
+        } catch {
+            print("Failed to save player score: \(error)")
+        }
+        return true
     }
 
     

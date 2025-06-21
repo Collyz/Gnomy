@@ -20,7 +20,7 @@ enum GameViewState {
 }
 
 class GameViewController: UIViewController {
-    @StateObject private var playerInfoStack = PlayerInfoStack.shared
+    private var playerInfoStack = PlayerInfoStack.shared
     @Published var currentState: GameViewState = .menu
     @Published var currentVolume: Float = 0.0
     
@@ -39,7 +39,9 @@ class GameViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Core Data Setup        // Setting the view model
+        // Core Data Setup
+        
+        // Setting the view model
         viewModel = GameViewModel()
 
         setupMenuView()
@@ -123,7 +125,8 @@ class GameViewController: UIViewController {
 
     // Updates the high score and global score
     func lossGame() {
-//        let roundScore = Int64(self.currScore())
+        let roundScore = Int64(self.currScore())
+        playerInfoStack.saveScore(roundScore)
 //        viewModel.updateHighScore(newScore: roundScore)
         if restartView == nil {
             restartView = RestartView(

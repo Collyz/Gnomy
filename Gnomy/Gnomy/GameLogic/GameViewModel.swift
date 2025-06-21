@@ -17,7 +17,7 @@ struct User: Identifiable {
 // Just for previews (remove for publish launch)
 extension NSManagedObjectContext {
     static var preview: NSManagedObjectContext {
-        let container = NSPersistentContainer(name: "HighScore")
+        let container = NSPersistentContainer(name: "PlayerData")
         container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null") // Use in-memory store
         container.loadPersistentStores { _, error in
             if let error = error {
@@ -29,6 +29,7 @@ extension NSManagedObjectContext {
 }
 
 @MainActor class GameViewModel: ObservableObject {
+    private var playerInfoStack = PlayerInfoStack.shared
     @Published var username: String = ""
     @Published var highscore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
@@ -38,7 +39,15 @@ extension NSManagedObjectContext {
     
     init() { }
     
-    public func fetchHighScore() async {
+    public func fetchUsername() {
+        username = playerInfoStack.fetchPlayerInfo().username ?? ""
+    }
+    
+    public func fetchHighScore() {
+        highscore = playerInfoStack.fetchPlayerInfo().score
+    }
+    
+    public func fetchGlobalHighScore() async {
         
     }
 }

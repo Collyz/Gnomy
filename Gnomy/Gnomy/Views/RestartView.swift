@@ -10,6 +10,7 @@ import SwiftUI
 import SpriteKit
 
 struct RestartView: View {
+    @StateObject private var playerInfoStack = PlayerInfoStack.shared
     @ObservedObject var viewModel: GameViewModel
     @State var controller: GameViewController
     var onRestart: () -> Void

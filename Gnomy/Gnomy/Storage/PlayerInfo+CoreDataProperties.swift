@@ -16,7 +16,7 @@ extension PlayerInfo {
         return NSFetchRequest<PlayerInfo>(entityName: "PlayerInfo")
     }
 
-    @NSManaged public var score: NSNumber?
+    @NSManaged public var score: Int64
     @NSManaged public var username: String?
 
 }
