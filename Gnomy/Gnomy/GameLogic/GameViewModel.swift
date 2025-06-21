@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import Combine
 import CoreData
 import AWSS3

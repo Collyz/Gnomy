@@ -129,7 +129,7 @@ class GameViewController: UIViewController {
 
     // Updates the high score and global score
     func lossGame() {
-        let roundScore = Int64(self.currScore())
+//        let roundScore = Int64(self.currScore())
 //        viewModel.updateHighScore(newScore: roundScore)
         if restartView == nil {
             restartView = RestartView(
