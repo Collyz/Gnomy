@@ -277,7 +277,6 @@
 				DEVELOPMENT_TEAM = 228AT83U6Q;
 				GCC_PREPROCESSOR_DEFINITIONS = "\"AWS_ACCESS_KEY=$(AWS_ACCESS_KEY) AWS_SECRET_KEY=$(AWS_SECRET_KEY)\"";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Gnomy/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.arcade-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -315,7 +314,6 @@
 				DEVELOPMENT_TEAM = 228AT83U6Q;
 				GCC_PREPROCESSOR_DEFINITIONS = "\"AWS_ACCESS_KEY=$(AWS_ACCESS_KEY) AWS_SECRET_KEY=$(AWS_SECRET_KEY)\"";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Gnomy/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.arcade-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;

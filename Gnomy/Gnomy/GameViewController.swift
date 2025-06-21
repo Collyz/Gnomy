@@ -130,7 +130,7 @@ class GameViewController: UIViewController {
     // Updates the high score and global score
     func lossGame() {
         let roundScore = Int64(self.currScore())
-        viewModel.updateHighScore(newScore: roundScore)
+//        viewModel.updateHighScore(newScore: roundScore)
         if restartView == nil {
             restartView = RestartView(
                 viewModel: self.viewModel,
@@ -155,8 +155,8 @@ class GameViewController: UIViewController {
     }
     
     func quitToMenu() {
-        let roundScore = Int64(self.currScore())
-        viewModel.updateHighScore(newScore: roundScore)
+//        let roundScore = Int64(self.currScore())
+//        viewModel.updateHighScore(newScore: roundScore)
         musicPlayer?.pauseBgMusic()
         gameScene?.resetGame()
         showSwiftUIView(currMenu)

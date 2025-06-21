@@ -19,11 +19,18 @@ struct PauseView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                SharedText(fontSize: 20, text: "Global High Score: \(viewModel.globalHighScore)", color: .white)
-                    .padding()
-                SharedText(fontSize: 20, text: "Your High Score: \(viewModel.highscore)", color: .white)
-                    .padding()
-                SharedText(fontSize: 24, text: "Master Volume", color: .white)
+                SharedText(fontSize: 24, text: "Global High Score: \(viewModel.globalHighScore)", color: .white)
+                    .padding(.bottom, 10)
+                SharedText(fontSize: 24, text: "Your High Score: \(viewModel.highscore)", color: .white)
+                    .padding(.bottom, 30)
+                Divider()
+                    .frame(height: 1)
+                    .overlay(Color.white)
+                    .padding(.horizontal, 40)
+                    .opacity(1)
+                SharedText(fontSize: 24, text: "Volume", color: .white)
+                    .padding(.top, 30)
+                
                 Slider(
                     value: $volumeValue,
                     in: 0...1,
@@ -32,28 +39,29 @@ struct PauseView: View {
                     Text("Volume")
                 } minimumValueLabel: {
                     Text("0")
-                        .font(.custom("Chalkduster", size: 24))
+                        .font(.custom("Arial", size: 24))
                         .foregroundColor(.white)
                 } maximumValueLabel: {
                     Text("100")
-                        .font(.custom("Chalkduster", size: 24))
+                        .font(.custom("Arial", size: 24))
                         .foregroundColor(.white)
                 }
-                .padding()
+                .padding(.top, 10)
                 .onChange(of: volumeValue) { _, newVal in
                     controller.setVolume(newVal)
                 }
                 .padding()
+                .padding(.bottom, 30)
                 SomeButton("Resume", backgroundColor: .bgBlue, foregroundColor: .white, borderColor: .white)
                     .onTapGesture {
                         onUnpause()
                     }
-                    .padding(.bottom, 50)
+                    .padding(.bottom, 20)
                 SomeButton("Quit to Menu", backgroundColor: .bgBlue, foregroundColor: .white, borderColor: .white)
                     .onTapGesture {
                         quitToMenu()
                     }
-                    .padding(.bottom, 250)
+                    .padding(.bottom, 170)
             }
             .background(
                 Image("background")

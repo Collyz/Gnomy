@@ -23,7 +23,7 @@ struct SomeButton: View {
     
     var body: some View {
         Text(buttonLabel)
-            .font(.custom("Chalkduster", size: 35))
+            .font(.custom("Century Gothic", size: 35))
             .font(.largeTitle)
             .padding(.horizontal, 25)
             .padding(.vertical, 0)
@@ -49,7 +49,7 @@ struct SharedText: View {
     
     var body: some View {
         Text(text)
-            .font(.custom("Chalkduster", size: fontSize))
+            .font(.custom("Arial", size: fontSize))
             .foregroundColor(fontColor)
     }
 }
