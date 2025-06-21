@@ -15,22 +15,9 @@
 		002468A72D166D7E00EFD914 /* Gnomy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gnomy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		007EC2042D698F4E007F9817 /* Exceptions for "Gnomy" folder in "Gnomy" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 002468A62D166D7E00EFD914 /* Gnomy */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		002468A92D166D7E00EFD914 /* Gnomy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				007EC2042D698F4E007F9817 /* Exceptions for "Gnomy" folder in "Gnomy" target */,
-			);
 			path = Gnomy;
 			sourceTree = "<group>";
 		};
