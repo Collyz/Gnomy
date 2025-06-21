@@ -20,6 +20,7 @@ enum GameViewState {
 }
 
 class GameViewController: UIViewController {
+    @StateObject private var playerInfoStack = PlayerInfoStack.shared
     @Published var currentState: GameViewState = .menu
     @Published var currentVolume: Float = 0.0
     
@@ -34,19 +35,12 @@ class GameViewController: UIViewController {
     var skView: SKView?
     
     var musicPlayer: MusicPlayer?
-    var container: NSPersistentContainer!
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Core Data Setup
-        container = NSPersistentContainer(name: "PlayerInfo")
-        container.loadPersistentStores { _, error in
-            if let error = error {
-                print("Unresolved error \(error)")
-            }
-        }
-        // Setting the view model
-        viewModel = GameViewModel(context: container.viewContext)
+        // Core Data Setup        // Setting the view model
+        viewModel = GameViewModel()
 
         setupMenuView()
         setupGameScene()

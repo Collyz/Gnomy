@@ -74,7 +74,7 @@ struct PauseView: View {
 }
 
 #Preview {
-    @Previewable @State var previewViewModel = GameViewModel(context: .preview)
+    @Previewable @State var previewViewModel = GameViewModel()
     @Previewable @State var previewVolumeValue: Float = 0.5
     
     PauseView(viewModel: previewViewModel,

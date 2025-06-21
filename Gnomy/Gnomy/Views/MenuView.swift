@@ -9,6 +9,7 @@ import SwiftUI
 import SpriteKit
 import CoreData
 struct MenuView: View {
+    @StateObject private var playerInfoStack = PlayerInfoStack.shared
     @ObservedObject var viewModel: GameViewModel
     @State private var username: String = ""
     @State private var validUsername: Bool = true
@@ -76,6 +77,6 @@ struct MenuView: View {
 #Preview {
     @Previewable @State var previewHighScore: Int64 = 0
     @Previewable @State var previewGlobalHighScore: Int64 = 0
-    @Previewable @State var previewViewModel = GameViewModel(context: .preview)
+    @Previewable @State var previewViewModel = GameViewModel()
     MenuView(viewModel: previewViewModel, onStartTapped: {})
 }

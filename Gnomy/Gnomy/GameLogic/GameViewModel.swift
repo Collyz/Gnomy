@@ -35,13 +35,8 @@ extension NSManagedObjectContext {
     @Published var usernameError: String = ""
     @Published var leaderboard: [User] = []
     
-    private var context: NSManagedObjectContext
     
-    init(context: NSManagedObjectContext) {
-        // Set context for coredata
-        self.context = context
-        
-    }
+    init() { }
     
     public func fetchHighScore() async {
         
