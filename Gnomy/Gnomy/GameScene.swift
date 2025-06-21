@@ -42,7 +42,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // Nonplayer nodes
     private let cam = SKCameraNode()
-    private let scoreNode = SKLabelNode(fontNamed: "Chalkduster")
+    private let scoreNode = SKLabelNode(fontNamed: "Chalkboard SE")
     private var background = SKSpriteNode(imageNamed: "background")
     private let pauseButton = SKSpriteNode(imageNamed: "pause")
     
