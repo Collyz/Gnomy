@@ -42,16 +42,17 @@ struct MenuView: View {
                     .multilineTextAlignment(.center)
                     .frame(width: 300)
                     .onSubmit {
-                        hasUsername = playerInfoStack.saveUsername(username)
+                        hasUsername = viewModel.saveUsername(username)
                     }
 
                 SharedText(fontSize: 20, text: "Enter your username to begin", color: .white)
-                    .padding(.bottom, 300)
+                    .padding(.bottom, 25)
             }
                     
                 // Error message from viewmodel
-//                SharedText(fontSize: 20, text: viewModel.usernameError, color: .white)
-//                    .padding(.bottom, 300)
+                SharedText(fontSize: 20, text: viewModel.usernameError, color: .red)
+                .padding(.horizontal, 25)
+                .padding(.bottom, 250)
             
             Spacer()
         }.background(

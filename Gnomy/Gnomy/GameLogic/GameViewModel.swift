@@ -47,6 +47,17 @@ extension NSManagedObjectContext {
         highscore = playerInfoStack.fetchPlayerInfo().score
     }
     
+    public func saveUsername(_ username: String) -> Bool{
+        var isValid = username.trimmingCharacters(in: .whitespacesAndNewlines).count > 4
+        if isValid {
+            isValid = playerInfoStack.saveUsername(username)
+        }
+        if !isValid {
+            usernameError = "Username must be longer than 4 characters and cannot contain spaces"
+        }
+        return isValid
+    }
+    
     public func fetchGlobalHighScore() async {
         
     }
