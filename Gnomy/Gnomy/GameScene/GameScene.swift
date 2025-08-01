@@ -224,6 +224,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Background assignments
     func createBg() {
+        
         background = Background("background", CGSize(width: 620, height: 1400))
         addChild(background)
     }

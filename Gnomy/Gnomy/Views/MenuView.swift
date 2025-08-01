@@ -18,9 +18,12 @@ struct MenuView: View {
 //    @State private var existingUsername: Bool = true
     
     var onStartTapped: () -> Void
+    // DynamoDB Setup
     
+    @State private var databaseManager: DynamoDBManager?
     var body: some View {
         VStack {
+            
             Spacer()
             if hasUsername {
                 SharedText(fontSize: 30, text: "Welcome back, \(viewModel.username)!", color: .white)
@@ -62,12 +65,9 @@ struct MenuView: View {
         )
         .ignoresSafeArea()
         .onAppear {
-            let info = playerInfoStack.fetchPlayerInfo()
-            if info.username != "" {
-                hasUsername = true
-            }
-            viewModel.fetchUsername()
+            hasUsername = viewModel.fetchUsername()
             viewModel.fetchHighScore()
+            viewModel.testDBStuff()
         }
     }
 }

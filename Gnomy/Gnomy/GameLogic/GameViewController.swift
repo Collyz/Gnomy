@@ -35,12 +35,13 @@ class GameViewController: UIViewController {
     var skView: SKView?
     
     var musicPlayer: MusicPlayer?
+    var databaseManager: DynamoDBManager?
     
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Core Data Setup
-        
+    
         // Setting the view model
         viewModel = GameViewModel()
 
@@ -52,6 +53,7 @@ class GameViewController: UIViewController {
 
     // Set the starting view to be the menu view
     private func setupMenuView() {
+
         currMenu = MenuView(
             viewModel: self.viewModel,
             onStartTapped: { self.startGame() }
@@ -126,7 +128,7 @@ class GameViewController: UIViewController {
     // Updates the high score and global score
     func lossGame() {
         let roundScore = Int64(self.currScore())
-        playerInfoStack.saveScore(roundScore)
+        viewModel.saveHighScore(roundScore)
 //        viewModel.updateHighScore(newScore: roundScore)
         if restartView == nil {
             restartView = RestartView(

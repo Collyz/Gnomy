@@ -39,26 +39,48 @@ extension NSManagedObjectContext {
     
     init() { }
     
-    public func fetchUsername() {
+    public func fetchUsername() -> Bool{
         username = playerInfoStack.fetchPlayerInfo().username ?? ""
+        return username != ""
     }
     
     public func fetchHighScore() {
         highscore = playerInfoStack.fetchPlayerInfo().score
     }
     
+    public func fetchGlobalHighScore() async {
+        
+    }
+    
     public func saveUsername(_ username: String) -> Bool{
         var isValid = username.trimmingCharacters(in: .whitespacesAndNewlines).count > 4
         if isValid {
             isValid = playerInfoStack.saveUsername(username)
-        }
-        if !isValid {
+            self.username = username
+        } else if !isValid {
             usernameError = "Username must be longer than 4 characters and cannot contain spaces"
         }
+        
         return isValid
     }
     
-    public func fetchGlobalHighScore() async {
-        
+    public func saveHighScore(_ score: Int64) -> Bool {
+        let result = playerInfoStack.saveScore(score)
+        if result {
+            self.highscore = score
+        }
+        return result
     }
+    
+    public func testDBStuff() {
+        var databaseManager: DynamoDBManager!
+        print("Running!")
+        Task {
+            print("init being called")
+            databaseManager = try await DynamoDBManager(region: "us-east-1")
+            print("after init")
+        }
+    }
+    
+
 }
