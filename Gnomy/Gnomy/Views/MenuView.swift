@@ -67,7 +67,7 @@ struct MenuView: View {
         .onAppear {
             hasUsername = viewModel.fetchUsername()
             viewModel.fetchHighScore()
-            viewModel.testDBStuff()
+//            viewModel.testDBStuff()
         }
     }
 }

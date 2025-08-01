@@ -9,6 +9,11 @@ import SpriteKit
 import GameplayKit
 import AVFoundation
 
+enum BlockValues: CGFloat {
+    case minSpawnY = 100.0
+    case maxSpawnY = 280.0
+}
+
 // Bitmask categories
 struct PhysicsCategory {
     static let none: UInt32 = 0x1 << 0
@@ -27,7 +32,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var firstTap = false // first jump check
     private var score: Int = 0
     private var platformY: CGFloat = -200
-    private let nextAddY: CGFloat = 280
+    private var nextAddY: CGFloat = 280
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     private let powerupNames: Array<String> = ["spring"]
     private var touchOffset: CGPoint?
@@ -36,6 +41,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var baseFloorSize: CGSize?
     private var spawnMoveBlock: Bool = false
     private var totalBlocks: Int = 0
+    private var spawnBlocks = 12
 
     // Player
     private let player = Player(fileName: "player", position: CGPoint(x: 0, y: -5))
@@ -79,7 +85,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createBaseFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
         player.position = CGPoint(x: 0,
                                   y: (-(baseFloorSize!.height / 2)) + (player.size.height)
-                                  + player.size.height + 10) // set player on top of floor
+                                  + player.size.height + 10 // set player on top of floor
+                                )
         platformY = 210 //found manually setting nextPlatformY
         
         // Generate initial platforms above the base floor
@@ -147,7 +154,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 block.removeFromParent()
             }
         }
-        if blocks.count < 7 {
+        if blocks.count < spawnBlocks {
             createPlatform()
         }
         
@@ -234,6 +241,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         totalBlocks += 1
         var blockPos = CGPoint()
         var moveBlock = false;
+        
+        nextAddY = CGFloat.random(in: BlockValues.minSpawnY.rawValue...BlockValues.maxSpawnY.rawValue)
         
         if totalBlocks % 7 == 0 || totalBlocks % 15 == 0{
             blockPos = CGPoint(
