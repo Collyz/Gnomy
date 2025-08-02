@@ -10,7 +10,7 @@ class Block: SKSpriteNode{
     public var isBaseFloor: Bool = false
     public var moving: Bool = false
     
-    init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat, _ platformY: inout CGFloat)
+    init(_ filename: String, _ size: CGSize, _ position: CGPoint, _ nextAddY: CGFloat)
     {
         let texture = blockAtlas.textureNamed(filename)
         texture.filteringMode = .nearest
@@ -19,7 +19,6 @@ class Block: SKSpriteNode{
         self.name = "platform"
         self.scale(to: size)
         self.position = position
-        platformY += nextAddY
 
         // Add physics to the platform
         // Add physics to only the top of the platform

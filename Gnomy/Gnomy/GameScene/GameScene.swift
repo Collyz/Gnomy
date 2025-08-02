@@ -12,6 +12,7 @@ import AVFoundation
 enum BlockValues: CGFloat {
     case minSpawnY = 100.0
     case maxSpawnY = 280.0
+    
 }
 
 // Bitmask categories
@@ -240,7 +241,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func createPlatform() {
         totalBlocks += 1
         var blockPos = CGPoint()
-        var moveBlock = false;
+        var isMovingBlock = false;
         
         nextAddY = CGFloat.random(in: BlockValues.minSpawnY.rawValue...BlockValues.maxSpawnY.rawValue)
         
@@ -249,7 +250,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 x: 0,
                 y: platformY
             )
-            moveBlock = true
+            isMovingBlock = true
         } else {
             blockPos = CGPoint(
                 x: CGFloat.random(in: frame.minX + platformSize!.width + 40...frame.maxX - platformSize!.width - 40),
@@ -257,8 +258,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             )
         }
         
-        let block = Block(blockNames[(score / 100) % blockNames.count], platformSize!, blockPos, nextAddY, &platformY)
-        block.moving = moveBlock
+        let block = Block(blockNames[(score / 100) % blockNames.count], platformSize!, blockPos, nextAddY)
+        block.moving = isMovingBlock
         
         let currSeconds = Calendar.current.component(.second, from: Date())
         if !block.moving && (currSeconds == 30 || currSeconds == 58) {
@@ -270,12 +271,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blocks.append(block)
 
         block.moveSideToSide(frame.width)
+        platformY += nextAddY
         
     }
     
     // MARK: - Starting Floor Generation
     func createBaseFloor(at position: CGPoint, _ size: CGSize) {
-        let baseFloor = Block("base_floor", size, position, nextAddY, &platformY)
+        let baseFloor = Block("base_floor", size, position, nextAddY)
         baseFloor.name = "floor"
         baseFloor.isBaseFloor = true // Mark it as the base floor for logic checks
         addChild(baseFloor)
