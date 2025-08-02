@@ -57,6 +57,7 @@ extension NSManagedObjectContext {
         if isValid {
             isValid = playerInfoStack.saveUsername(username)
             self.username = username
+            usernameError = ""
         } else if !isValid {
             usernameError = "Username must be longer than 4 characters and cannot contain spaces"
         }

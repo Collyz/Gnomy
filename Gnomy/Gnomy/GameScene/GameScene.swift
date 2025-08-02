@@ -9,11 +9,17 @@ import SpriteKit
 import GameplayKit
 import AVFoundation
 
-enum BlockValues: CGFloat {
-    case minSpawnY = 100.0
-    case maxSpawnY = 280.0
-    
-}
+let spawnBlockCount: Int = 12
+let blockMinSpawnY: CGFloat = 70.0
+let blockMaxSpawnY: CGFloat = 280.0
+let blockChangeAfter: Int = 100
+let blockMovingMin: Int = 1
+let blockMovingMax: Int = 5
+let blockMovingEqualTo: Int = 1
+let spawnPowerUpMin: Int = 1
+let spawnPowerUpMax: Int = 10
+let spawPowerUpEqualTo: Int = 1
+let zPosUI: CGFloat = 4
 
 // Bitmask categories
 struct PhysicsCategory {
@@ -32,19 +38,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Game logic
     private var firstTap = false // first jump check
     private var score: Int = 0
-    private var platformY: CGFloat = -200
+    private var nextPlatformY: CGFloat = -200
     private var nextAddY: CGFloat = 280
     private let blockNames: Array<String> = ["b_grass", "b_wood", "b_stone", "b_brick", "b_iron"]
     private let powerupNames: Array<String> = ["spring"]
     private var touchOffset: CGPoint?
-//    private let pregenerateBlocks: Int = 1
     private var platformSize: CGSize?
     private var baseFloorSize: CGSize?
     private var spawnMoveBlock: Bool = false
     private var totalBlocks: Int = 0
-    private var spawnBlocks = 12
 
-    // Player
     private let player = Player(fileName: "player", position: CGPoint(x: 0, y: -5))
     
     // Nonplayer nodes
@@ -57,7 +60,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var blocks: Array<Block> = Array()
     
     // Debug
-//    private var debugOutline = SKShapeNode()
+    // private var debugOutline = SKShapeNode()
     private var targetX: CGFloat?
     // Camera
     private let cameraVerticalOffset: CGFloat = 200
@@ -83,18 +86,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         platformSize = CGSize(width: self.bounds.width/10, height: 30)
 
         // Generate the base floor
-        createBaseFloor(at: CGPoint(x: 0, y: platformY), baseFloorSize!) // draw floor at (0, -200)
-        player.position = CGPoint(x: 0,
-                                  y: (-(baseFloorSize!.height / 2)) + (player.size.height)
-                                  + player.size.height + 10 // set player on top of floor
-                                )
-        platformY = 210 //found manually setting nextPlatformY
+        createBaseFloor(at: CGPoint(x: 0, y: nextPlatformY), baseFloorSize!) // draw floor at (0, -200)
+        player.position = CGPoint(
+            x: 0,
+            y: (-(baseFloorSize!.height / 2)) + (player.size.height) + player.size.height + 10 // set player on top of floor
+        )
+        nextPlatformY = 210 //found manually, setting nextPlatformY
         
-        // Generate initial platforms above the base floor
     }
     
+    // MARK: this method is called when the user touches the screen
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        // this method is called when the user touches the screen
         
         // Code block to update the touchOffset of the player
         guard let touch = touches.first else { return }
@@ -118,8 +120,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    // MARK: Called whenever the user stops touching the screen
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        // this method is called when the user stops touching the screen
         touchOffset = nil
         player.stopMovement()
     }
@@ -142,7 +144,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - called before each frame is rendered
     override func update(_ currentTime: TimeInterval) {
-        // this method is called before each frame is rendered (https://developer.apple.com/documentation/spritekit/responding-to-frame-cycle-events)
+        // (https://developer.apple.com/documentation/spritekit/responding-to-frame-cycle-events)
         // Generate and remove blocks
         for block in blocks {
             if cam.position.y - (block.position.y - block.size.height) > (self.bounds.height / 2) + 100{
@@ -155,7 +157,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 block.removeFromParent()
             }
         }
-        if blocks.count < spawnBlocks {
+        if blocks.count < spawnBlockCount {
             createPlatform()
         }
         
@@ -239,30 +241,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Platform Generation
     func createPlatform() {
-        totalBlocks += 1
         var blockPos = CGPoint()
         var isMovingBlock = false;
+        var spawnPowerup = Int.random(in: spawnPowerUpMin...spawnPowerUpMax)
+        var xBlockPos = CGFloat.random(in: frame.minX + platformSize!.width + 40...frame.maxX - platformSize!.width - 40)
+        totalBlocks += 1
+        nextAddY = CGFloat.random(in: blockMinSpawnY...blockMaxSpawnY)
         
-        nextAddY = CGFloat.random(in: BlockValues.minSpawnY.rawValue...BlockValues.maxSpawnY.rawValue)
         
         if totalBlocks % 7 == 0 || totalBlocks % 15 == 0{
-            blockPos = CGPoint(
-                x: 0,
-                y: platformY
-            )
+            blockPos = CGPoint(x: 0, y: nextPlatformY)
             isMovingBlock = true
         } else {
-            blockPos = CGPoint(
-                x: CGFloat.random(in: frame.minX + platformSize!.width + 40...frame.maxX - platformSize!.width - 40),
-                y: platformY
-            )
+            blockPos = CGPoint(x: xBlockPos, y: nextPlatformY)
         }
         
-        let block = Block(blockNames[(score / 100) % blockNames.count], platformSize!, blockPos, nextAddY)
+        let block = Block(blockNames[(score / blockChangeAfter) % blockNames.count], platformSize!, blockPos, nextAddY)
         block.moving = isMovingBlock
         
-        let currSeconds = Calendar.current.component(.second, from: Date())
-        if !block.moving && (currSeconds == 30 || currSeconds == 58) {
+        // Spawning a powerup
+        if !block.moving && spawnPowerup == spawPowerUpEqualTo {
             let spring = Spring(powerupNames[0], blockPos)
             addChild(spring)
         }
@@ -271,7 +269,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blocks.append(block)
 
         block.moveSideToSide(frame.width)
-        platformY += nextAddY
+        nextPlatformY += nextAddY
         
     }
     
@@ -290,7 +288,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreNode.fontSize = 65
         scoreNode.fontColor = SKColor.darkGreen
         scoreNode.position = position
-        scoreNode.zPosition = 1
+        scoreNode.zPosition = zPosUI
         addChild(scoreNode)
     }
     
@@ -299,7 +297,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         pauseButton.name = "pauseButton"
         pauseButton.size = CGSize(width: 50, height: 50)
         pauseButton.position = CGPoint(x: 230, y: 0)
-        pauseButton.zPosition = 1
+        pauseButton.zPosition = zPosUI
         
         // make pause easier to tap on by adding an invisible node behind it
         let invisibleNode = SKSpriteNode(color: .clear, size: CGSize(width: 100, height: 100))
@@ -400,7 +398,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         blocks.removeAll()
-        platformY = 210
+        nextPlatformY = 210
         player.removeFromParent()
         
         player.addStartPlatform(size: player.size)
