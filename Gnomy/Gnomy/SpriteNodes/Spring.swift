@@ -29,7 +29,7 @@ class Spring: SKSpriteNode{
         self.physicsBody?.restitution = 0
         
         // Set physics category
-        self.physicsBody?.categoryBitMask = PhysicsCategory.platform
+        self.physicsBody?.categoryBitMask = PhysicsCategory.powerup
         self.physicsBody?.contactTestBitMask = PhysicsCategory.player // Detect player contact
         self.physicsBody?.collisionBitMask = PhysicsCategory.player // Allow collision with the player
         

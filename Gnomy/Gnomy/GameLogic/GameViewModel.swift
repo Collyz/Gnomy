@@ -30,6 +30,7 @@ extension NSManagedObjectContext {
 
 @MainActor class GameViewModel: ObservableObject {
     private var playerInfoStack = PlayerInfoStack.shared
+    @Published var playerID: String = ""
     @Published var username: String = ""
     @Published var highscore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
@@ -39,7 +40,16 @@ extension NSManagedObjectContext {
     
     init() { }
     
-    public func fetchUsername() -> Bool{
+    public func fetchPlayerID() {
+        playerID = playerInfoStack.fetchPlayerInfo().playerID ?? ""
+    }
+    
+    public func setPlayerID() {
+        playerInfoStack.setPlayerID()
+        fetchPlayerID()
+    }
+    
+    public func fetchUsername() -> Bool {
         username = playerInfoStack.fetchPlayerInfo().username ?? ""
         return username != ""
     }
@@ -48,6 +58,7 @@ extension NSManagedObjectContext {
         highscore = playerInfoStack.fetchPlayerInfo().score
     }
     
+    // TODO: Add database fetch for the leaderboard and set the highscore
     public func fetchGlobalHighScore() async {
         
     }
@@ -58,6 +69,7 @@ extension NSManagedObjectContext {
             isValid = playerInfoStack.saveUsername(username)
             self.username = username
             usernameError = ""
+            
         } else if !isValid {
             usernameError = "Username must be longer than 4 characters and cannot contain spaces"
         }
@@ -65,23 +77,27 @@ extension NSManagedObjectContext {
         return isValid
     }
     
-    public func saveHighScore(_ score: Int64) -> Bool {
+    public func saveHighScore(_ score: Int64) {
         let result = playerInfoStack.saveScore(score)
         if result {
             self.highscore = score
+            saveHighScoretoDB(score)
         }
-        return result
     }
     
-    public func testDBStuff() {
-        var databaseManager: DynamoDBManager!
-        print("Running!")
-        Task {
-            print("init being called")
-            databaseManager = try await DynamoDBManager(region: "us-east-1")
-            print("after init")
-        }
+    private func saveHighScoretoDB(_ score: Int64) {
+        
     }
+    
+//    public func testDBStuff() {
+//        var databaseManager: DynamoDBManager!
+//        print("Running!")
+//        Task {
+//            print("init being called")
+//            databaseManager = try await DynamoDBManager(region: "us-east-1")
+//            print("after init")
+//        }
+//    }
     
 
 }

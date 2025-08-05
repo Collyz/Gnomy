@@ -65,6 +65,7 @@ struct MenuView: View {
         )
         .ignoresSafeArea()
         .onAppear {
+            viewModel.setPlayerID()
             hasUsername = viewModel.fetchUsername()
             viewModel.fetchHighScore()
 //            viewModel.testDBStuff()

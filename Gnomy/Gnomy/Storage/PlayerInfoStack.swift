@@ -47,6 +47,33 @@ class PlayerInfoStack: ObservableObject {
         }
     }
     
+    // Save the generated playerID
+    public func setPlayerID() {
+        let context = persistentContainer.viewContext
+        let request: NSFetchRequest<PlayerInfo> = PlayerInfo.fetchRequest()
+        do {
+            // Check if the core data is empty
+            if try context.fetch(request).isEmpty {
+                // No PlayerInfo exists — create and save a new one
+                let newPlayerInfo = PlayerInfo(context: context)
+                newPlayerInfo.playerID = UUID().uuidString
+                try context.save()
+            } else {
+                // Core data is not empty check for playerID
+                if let existingPlayerInfo = try context.fetch(request).first {
+                    if ((existingPlayerInfo.playerID) == nil) { // playerID is empty, generate a new one
+                        existingPlayerInfo.playerID = UUID().uuidString
+                        print(existingPlayerInfo)
+                        try context.save()
+                    }
+                }
+                
+            }
+        } catch {
+            print("Failed to fetch or create player ID: \(error)")
+        }
+    }
+    
     // Saves a new input username
     public func saveUsername(_ newUsername: String) -> Bool{
         guard !newUsername.trimmingCharacters(in: .whitespaces).isEmpty else { return false }

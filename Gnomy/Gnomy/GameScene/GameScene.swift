@@ -26,6 +26,7 @@ struct PhysicsCategory {
     static let none: UInt32 = 0x1 << 0
     static let player: UInt32 = 0x1 << 1
     static let platform: UInt32 = 0x1 << 2
+    static let powerup: UInt32 = 0x1 << 2
     static let border: UInt32 = 0x1 << 3
 }
 // Block Atlas/
@@ -197,8 +198,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let otherBody = playerBody == contact.bodyA ? contact.bodyB : contact.bodyA
         
         if let platformNode = otherBody.node as? Block {
-        // Ensure the player is landing on the top of the platform
-            if contact.contactNormal.dy > 0 {
+            // Ensure the player is landing on the top of the platform
+
+            if contact.contactNormal.dy > 0.5 {
                 // Player is falling onto the platform
                 player.jump()
                 
@@ -213,10 +215,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         } else if let springNode = otherBody.node as? Spring {
             // Ensure the player is landing on top of the spring
-//            print("Player hit the spring!")
-            
-            // Perform a super jump
+            if contact.contactNormal.dy > 0 {
+                print("Player hit the spring!")
                 player.springJump()
+            }
             
             // Optional: Add a bounce animation or particle effect for spring
             springNode.bounceEffect()
@@ -241,12 +243,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Platform Generation
     func createPlatform() {
-        var blockPos = CGPoint()
-        var isMovingBlock = false;
-        var spawnPowerup = Int.random(in: spawnPowerUpMin...spawnPowerUpMax)
-        var xBlockPos = CGFloat.random(in: frame.minX + platformSize!.width + 40...frame.maxX - platformSize!.width - 40)
         totalBlocks += 1
         nextAddY = CGFloat.random(in: blockMinSpawnY...blockMaxSpawnY)
+        var blockPos = CGPoint()
+        var isMovingBlock = false;
+        let spawnPowerup = Int.random(in: spawnPowerUpMin...spawnPowerUpMax)
+        let xBlockPos = CGFloat.random(in: frame.minX + platformSize!.width + 40...frame.maxX - platformSize!.width - 40)
+        
         
         
         if totalBlocks % 7 == 0 || totalBlocks % 15 == 0{

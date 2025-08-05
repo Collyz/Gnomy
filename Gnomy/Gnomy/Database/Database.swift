@@ -52,8 +52,6 @@ class DynamoDBManager {
             }
 
             self.ddbClient = DynamoDBClient(config: config)
-            
-            try await self.createTable()
         } catch {
             print("ERROR: ", dump(error, name: "Initializing Amazon DynamoDBClient client"))
             throw error
@@ -110,6 +108,33 @@ class DynamoDBManager {
         let output = try await client.describeTable(input: input)
         return output.table?.tableStatus == .active
     }
+    
+    /// Inserts or updates a player's info in the DynamoDB table.
+    func insertPlayer(playerID: String, username: String, score: Int64) async throws {
+        guard let client = ddbClient else {
+            throw GnomyScoresError.uninitializedClient
+        }
+
+        let item: [String: DynamoDBClientTypes.AttributeValue] = [
+            "playerID": .s(playerID),
+            "username": .s(username),
+            "score": .n(String(score))
+        ]
+
+        let input = PutItemInput(
+            item: item,
+            tableName: tableName
+        )
+
+        do {
+            _ = try await client.putItem(input: input)
+            print("✅ Successfully inserted/updated player with ID: \(playerID)")
+        } catch {
+            print("❌ Failed to insert player: \(error)")
+            throw error
+        }
+    }
+
 
     /// Wait for the table to become active after creation.
     private func waitForTableActive() async throws {

@@ -15,9 +15,12 @@ extension PlayerInfo {
     @nonobjc public class func fetchRequest() -> NSFetchRequest<PlayerInfo> {
         return NSFetchRequest<PlayerInfo>(entityName: "PlayerInfo")
     }
-
-    @NSManaged public var score: Int64
+    
+    @NSManaged public var playerID: String?
     @NSManaged public var username: String?
+    @NSManaged public var score: Int64
+    
+
 
 }
 
