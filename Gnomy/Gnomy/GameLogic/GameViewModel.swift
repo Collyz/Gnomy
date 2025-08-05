@@ -86,7 +86,10 @@ extension NSManagedObjectContext {
     }
     
     private func saveHighScoretoDB(_ score: Int64) {
-        
+        Task {
+            let databaseManager = try await DynamoDBManager(region: "us-east-1")
+            try await databaseManager.insertPlayer(playerID: playerID, username: username, score: score)
+        }
     }
     
 //    public func testDBStuff() {

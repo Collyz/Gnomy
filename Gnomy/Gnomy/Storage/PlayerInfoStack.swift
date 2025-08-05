@@ -108,6 +108,11 @@ class PlayerInfoStack: ObservableObject {
             if let existingPlayer = try context.fetch(request).first {
                 if existingPlayer.score < newScore {
                     existingPlayer.score = newScore
+                    try context.save()
+                    return true
+                } else {
+                    try context.save()
+                    return false
                 }
             } else {
                 let newPlayer = PlayerInfo(context: context)

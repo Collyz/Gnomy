@@ -9,7 +9,7 @@ import SpriteKit
 import GameplayKit
 import AVFoundation
 
-let spawnBlockCount: Int = 12
+let blockCountMinimum: Int = 12
 let blockMinSpawnY: CGFloat = 70.0
 let blockMaxSpawnY: CGFloat = 280.0
 let blockChangeAfter: Int = 100
@@ -158,7 +158,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 block.removeFromParent()
             }
         }
-        if blocks.count < spawnBlockCount {
+        // Spawns the blocks if it falls below the minimum
+        if blocks.count < blockCountMinimum {
             createPlatform()
         }
         
@@ -215,10 +216,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         } else if let springNode = otherBody.node as? Spring {
             // Ensure the player is landing on top of the spring
-            if contact.contactNormal.dy > 0 {
-                print("Player hit the spring!")
-                player.springJump()
-            }
+//            if contact.contactNormal.dy > 0 {
+//
+//            }
+            player.springJump()
             
             // Optional: Add a bounce animation or particle effect for spring
             springNode.bounceEffect()
