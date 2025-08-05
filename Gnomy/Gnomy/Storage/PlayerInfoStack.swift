@@ -63,7 +63,6 @@ class PlayerInfoStack: ObservableObject {
                 if let existingPlayerInfo = try context.fetch(request).first {
                     if ((existingPlayerInfo.playerID) == nil) { // playerID is empty, generate a new one
                         existingPlayerInfo.playerID = UUID().uuidString
-                        print(existingPlayerInfo)
                         try context.save()
                     }
                 }
