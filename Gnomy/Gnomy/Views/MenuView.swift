@@ -26,17 +26,33 @@ struct MenuView: View {
             
             Spacer()
             if hasUsername {
-                SharedText(fontSize: 30, text: "Welcome back, \(viewModel.username)!", color: .white)
+                
+                SharedText(fontSize: 30, text: "Welcome back, \n\(viewModel.username)!", color: .white)
                     .padding(.bottom, 10)
+                    .multilineTextAlignment(.center)
                 
                 SharedText(fontSize: 25, text: "Your High Score: \(viewModel.highscore)", color: .white)
-                    .padding(.bottom, 30)
-
+                    .padding(.bottom, 50)
+                
+                SharedText(fontSize: 25, text: "Leaderboard:", color: .white)
+                    .padding(.bottom, 5)
+                    .underline()
+                
+                ForEach(Array(viewModel.leaderboard.enumerated()), id: \.offset) { _, player in
+                    SharedText(fontSize: 20, text: "\(player.username): \(player.highscore)", color: .white)
+                        .padding(.bottom, 1)
+                }
+                
+                
                 SomeButton("Start!", backgroundColor: Color.bgBlue, foregroundColor: Color.white, borderColor: Color.white)
                     .onTapGesture {
                         onStartTapped()
                     }
+                    .padding(.top, 50)
+                Spacer()
+            
             } else {
+                Spacer()
                 TextField("Enter a username", text: $username)
                     .font(.system(size: 24))
                     .padding()
@@ -50,14 +66,15 @@ struct MenuView: View {
 
                 SharedText(fontSize: 20, text: "Enter your username to begin", color: .white)
                     .padding(.bottom, 25)
-            }
-                    
                 // Error message from viewmodel
                 SharedText(fontSize: 20, text: viewModel.usernameError, color: .red)
                 .padding(.horizontal, 25)
                 .padding(.bottom, 250)
+                Spacer()
+            }
+                    
+                
             
-            Spacer()
         }.background(
             Image("background")
                 .resizable()
@@ -66,6 +83,7 @@ struct MenuView: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.setPlayerID()
+            viewModel.getLeaderboard()
             hasUsername = viewModel.fetchUsername()
             viewModel.fetchHighScore()
 //            viewModel.testDBStuff()
