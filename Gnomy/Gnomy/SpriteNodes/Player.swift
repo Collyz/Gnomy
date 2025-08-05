@@ -100,7 +100,7 @@ class Player: SKSpriteNode {
     func springJump() {
         guard let velocity = self.physicsBody?.velocity else { return }
         self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 0) // Reset vertical velocity
-        self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 5000) // Set spring vertical velocity
+        self.physicsBody?.velocity = CGVector(dx: velocity.dx, dy: 2000) // Set spring vertical velocity
     }
     
     func stopMovement() {
