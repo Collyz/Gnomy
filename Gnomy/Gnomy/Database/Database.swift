@@ -9,10 +9,10 @@ import AWSDynamoDB
 import Foundation
 
 /// Represents the structure of a player item stored in DynamoDB.
-struct PlayerDBInfo: Codable {
-    let playerID: String
+struct PlayerDBInfo: Identifiable {
+    let id: String
     var username: String
-    var highScore: Int64
+    var highscore: Int64
 }
 
 /// An enumeration of error codes representing issues that can arise when using
@@ -128,12 +128,78 @@ class DynamoDBManager {
 
         do {
             _ = try await client.putItem(input: input)
-            print("✅ Successfully inserted/updated player with ID: \(playerID)")
         } catch {
-            print("❌ Failed to insert player: \(error)")
             throw error
         }
     }
+    
+//    func deletePlayer(playerID: String) async throws {
+//        guard let client = ddbClient else {
+//            throw GnomyScoresError.uninitializedClient
+//        }
+//        
+//        let input = DeleteItemInput(
+//            key: [
+//                "playerID": .s(playerID)
+//            ],
+//            tableName: tableName
+//        )
+//        
+//        do {
+//            _ = try await client.deleteItem(input: input)
+//            print("Successfully deleted the player")
+//        } catch {
+//            print("failed to delete the player")
+//            throw error
+//        }
+//    }
+//    
+    func getLeaderboard() async throws -> [PlayerDBInfo] {
+        guard let client = ddbClient else {
+            throw GnomyScoresError.uninitializedClient
+        }
+
+        var players: [PlayerDBInfo] = []
+
+        let scanInput = ScanInput(tableName: tableName)
+
+        do {
+            let output = try await client.scan(input: scanInput)
+            guard let items = output.items else {
+                return Array(repeating: PlayerDBInfo(id: "",username: "Filler", highscore: -1), count: 5)
+            }
+
+            for item in items {
+                if
+                    let playerIDAttr = item["playerID"],
+                    case let .s(playerID) = playerIDAttr,
+                    let usernameAttr = item["username"],
+                    case let .s(username) = usernameAttr,
+                    let scoreAttr = item["score"],
+                    case let .n(scoreStr) = scoreAttr,
+                    let score = Int64(scoreStr)
+                {
+                    let player = PlayerDBInfo(id: playerID, username: username, highscore: score)
+                    players.append(player)
+                }
+            }
+
+            // Sort descending and pad if necessary
+            let sorted = players.sorted { $0.highscore > $1.highscore }
+            var topPlayers = Array(sorted.prefix(5))
+
+            while topPlayers.count < 5 {
+                topPlayers.append(PlayerDBInfo(id:"", username: "PlayerDNE", highscore: -1))
+            }
+
+            return topPlayers
+
+        } catch {
+            print("Failed to fetch leaderboard: \(error)")
+            throw error
+        }
+    }
+
 
 
     /// Wait for the table to become active after creation.

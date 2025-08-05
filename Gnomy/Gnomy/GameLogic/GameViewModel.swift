@@ -7,12 +7,6 @@
 
 import CoreData
 
-struct User: Identifiable {
-    let id = UUID()
-    var name: String
-    var score: Int64
-}
-
 
 // Just for previews (remove for publish launch)
 extension NSManagedObjectContext {
@@ -35,7 +29,7 @@ extension NSManagedObjectContext {
     @Published var highscore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
     @Published var usernameError: String = ""
-    @Published var leaderboard: [User] = []
+    @Published var leaderboard: [PlayerDBInfo] = []
     
     
     init() { }
@@ -68,10 +62,10 @@ extension NSManagedObjectContext {
         if isValid {
             isValid = playerInfoStack.saveUsername(username)
             self.username = username
-            usernameError = ""
+            self.usernameError = ""
             
         } else if !isValid {
-            usernameError = "Username must be longer than 4 characters and cannot contain spaces"
+            self.usernameError = "Username must be longer than 4 characters and cannot contain spaces"
         }
         
         return isValid
@@ -90,6 +84,14 @@ extension NSManagedObjectContext {
             let databaseManager = try await DynamoDBManager(region: "us-east-1")
             try await databaseManager.insertPlayer(playerID: playerID, username: username, score: score)
         }
+    }
+    
+    public func getLeaderboard() {
+        Task {
+            let databaseManager = try await DynamoDBManager(region: "us-east-1")
+            self.leaderboard = try await databaseManager.getLeaderboard()
+        }
+        
     }
     
 //    public func testDBStuff() {
