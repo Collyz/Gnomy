@@ -29,7 +29,7 @@ extension NSManagedObjectContext {
     @Published var highscore: Int64 = 0
     @Published var globalHighScore: Int64 = 0
     @Published var usernameError: String = ""
-    @Published var leaderboard: [PlayerDBInfo] = []
+    @Published var leaderboard: [PlayerDBInfo] = Array(repeating: PlayerDBInfo(id: "",username: "Filler", highscore: -1), count: 5)
     
     
     init() { }
@@ -89,6 +89,7 @@ extension NSManagedObjectContext {
     public func getLeaderboard() {
         Task {
             let databaseManager = try await DynamoDBManager(region: "us-east-1")
+            self.leaderboard = []
             self.leaderboard = try await databaseManager.getLeaderboard()
         }
         
